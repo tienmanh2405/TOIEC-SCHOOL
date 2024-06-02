@@ -1,12 +1,12 @@
 import express from 'express';
-import testRouter from "./src/routers/test.router.js"
+import userRouter from "./src/routers/user.router.js"
 import { SERVER_CONFIG } from './src/configs/server.config.js';
 
 const app = express();
 
 app.use(express.json());
 
-app.use(testRouter);
+app.use('/users',userRouter);
 async function main() {
     try {
 
