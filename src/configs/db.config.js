@@ -4,6 +4,14 @@ export const DB_CONFID = {
         user: {
             contextPath: "/users",
             role: 'nguoidung'
+        },
+        admin: {
+            contextPath: "/admins",
+            role: 'Admin'
+        },
+        giangvien: {
+            contextPath: "/giangviens",
+            role: 'GiangVien'
         }
     },
     mysql_connect: {
@@ -19,7 +27,7 @@ export const DB_CONFID = {
         cosodaotao: "cosodaotao",
         dangkyhoc: "dangkyhoc",
         diemdanh: "diemdanh",
-        giangvien: "giangvien",
+        quanly: "quanly",
         hocvien: "hocvien",
         khoahoc: "khoahoc",
         lophoc: "lophoc",

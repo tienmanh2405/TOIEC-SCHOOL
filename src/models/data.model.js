@@ -26,7 +26,31 @@ const getAll = (table, page, pageSize, sortField, sortOrder = 'ASC') => {
     });
 };
 
+const getByRole = (role, table1,table2, page, pageSize, sortField, sortOrder = 'ASC') => {    
+    return new Promise((resolve, reject) => {
+        const values = [];
+        let query = `SELECT * FROM ${table1} q INNER JOIN ${table2} p ON q.MaQuanLy = p.MaQuanLy WHERE p.MaVaiTro = ${role}`;
+        // Nếu có sortField, thêm mệnh đề ORDER BY
+        if (sortField) {
+            query += ` ORDER BY q.${sortField} ${sortOrder}`;
+        }
 
+        // Nếu có page và pageSize, thêm mệnh đề LIMIT và OFFSET
+        if (page && pageSize) {
+            const skip = (page - 1) * pageSize;
+            query += ` LIMIT ? OFFSET ?`;
+            values.push(pageSize, skip);
+        }
+
+        db.query(query, values, (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+};
 
 const getById = (table,dataId, id) => {    
     return new Promise((resolve, reject) => {
@@ -110,11 +134,43 @@ const findOne = (table, finds) => {
         });
     });
 }
+ 
+const getInfoWithJoin = (table1,table2,nameInfo, nameJoin, idName, id) => {
+    return new Promise((resolve, reject) => {
+        const query = `SELECT ${table2}.${nameInfo} FROM ${table1} INNER JOIN ${table2} ON ${table1}.${nameJoin} = ${table2}.${nameJoin} where ${idName} = ${id}`;
+        db.query(query, (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result[0]);
+            }
+        });
+    });
+}
+
+const updateRole = (table,nameRole, role,nameid, id) => {
+    return new Promise((resolve, reject) => {
+        const values = [];
+        values.push(role,id);
+        const query = `UPDATE \`${table}\` set \`${nameRole}\` =  ? WHERE \`${nameid}\` = ?`; 
+        db.query(query,values, (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+}
+
 export {
     getAll,
     getById,
     create,
     updateById,
     deleteById,
-    findOne
+    findOne,
+    getInfoWithJoin,
+    getByRole,
+    updateRole
 }

@@ -83,9 +83,32 @@ const createUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
     try {
+        const checkMaNguoiDung = req.decoded;
         const MaNguoiDung = req.params.MaNguoiDung;
-        const infoUser = req.body;
-        const updateUser = await Users.update(infoUser, MaNguoiDung);
+        if(checkMaNguoiDung.role !== DB_CONFID.resourses.admin.role && checkMaNguoiDung.role !== DB_CONFID.resourses.giangvien.role) {
+            if(checkMaNguoiDung.MaNguoiDung !== MaNguoiDung){
+                res.status(401).json({msg: 'You do not have permission to update this user!',success: false});
+                return;
+            }
+        }
+        const {HoTen,Email,SoDienThoai,TenTaiKhoan,MatKhau} = req.body;
+
+        let check = await Users.findOne({ Email });
+        if (check) {
+            return res.status(400).json({ success: false, message: "Email already exists." });
+        }
+
+        check = await Users.findOne({ SoDienThoai });
+        if (check) {
+            return res.status(400).json({ success: false, message: "Phone number already exists." });
+        }
+
+        check = await Users.findOne({ TenTaiKhoan });
+        if (check) {
+            return res.status(400).json({ success: false, message: "Username already exists." });
+        }
+        const hashed = await hashedPassword(MatKhau);
+        const updateUser = await Users.update({HoTen,Email,SoDienThoai,TenTaiKhoan,MatKhau:hashed}, MaNguoiDung);
         res.status(200).json(updateUser);
     } catch (error) {
         res.status(500).json(error);
@@ -94,11 +117,13 @@ const updateUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
     try {
-        const checkMaNguoiDung = req.decoded.MaNguoiDung;
+        const checkMaNguoiDung = req.decoded;
         const MaNguoiDung = req.params.MaNguoiDung;
-        if(checkMaNguoiDung!== MaNguoiDung){
-            res.status(401).json({msg: 'You do not have permission to delete this user!',success: false});
-            return;
+        if(checkMaNguoiDung.role !== DB_CONFID.resourses.admin.role && checkMaNguoiDung.role !== DB_CONFID.resourses.giangvien.role) {
+            if(checkMaNguoiDung.MaNguoiDung !== MaNguoiDung){
+                res.status(401).json({msg: 'You do not have permission to delete this user!',success: false});
+                return;
+            }
         }
         const deleteUser = await Users.delete(MaNguoiDung);
         res.status(200).json(deleteUser);

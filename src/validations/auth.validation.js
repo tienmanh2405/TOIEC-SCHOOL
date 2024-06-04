@@ -9,11 +9,13 @@ const register ={
         MatKhau: Joi.string().required(),
 })
 };
+
 const login = { 
     body: Joi.object({
         Email: Joi.string().required().email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } }),
         MatKhau: Joi.string().required(),
 })} ;
+
 export {
     register,
     login

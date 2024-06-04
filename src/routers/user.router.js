@@ -5,11 +5,18 @@ import {validation} from '../middlewares/validation.middleware.js';
 import { register as registerSchema, login as loginSchema } from '../validations/auth.validation.js';
 
 const router = express.Router();
+
 router.get('/',getUsers);
+
 router.get('/:MaNguoiDung',getUserById);
+
 router.post('/register',validation(registerSchema),createUser);
+
 router.delete('/delete/:MaNguoiDung',verify, deleteUser);
-router.put('/update/:MaNguoiDung',updateUser);
+
+router.put('/update/:MaNguoiDung',verify,updateUser);
+
 router.post('/login',validation(loginSchema), login);
+
 router.post('/auth/refresh-token', requestRefreshToken);
 export default router;
