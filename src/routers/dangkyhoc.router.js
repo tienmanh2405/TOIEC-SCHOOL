@@ -5,9 +5,9 @@ const router = express.Router();
 
 router.get('/', getDangKyHocs);
 router.get('/:id', getDangKyHocById);
-router.post('/', createDangKyHoc);
+router.post('/create', createDangKyHoc);
 router.post('/payment-intent', createPaymentIntent); 
-router.put('/:id', updateDangKyHoc);
-router.delete('/:id', deleteDangKyHoc);
+router.put('/update/:id', updateDangKyHoc);
+router.delete('/delete/:id', deleteDangKyHoc);
 
 export default router;

@@ -5,8 +5,11 @@ const router = express.Router();
 
 router.get('/', getKhoaHocs);
 router.get('/:id', getKhoaHocById);
-router.post('/', createKhoaHoc);
-router.put('/:id', updateKhoaHoc);
-router.delete('/:id', deleteKhoaHoc);
+
+
+//admin mới có quyền update, delete,create
+router.post('/create/', createKhoaHoc);
+router.put('/update/:id', updateKhoaHoc);
+router.delete('/delete/:id', deleteKhoaHoc);
 
 export default router;

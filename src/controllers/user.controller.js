@@ -12,7 +12,7 @@ const getUsers = async (req, res) => {
         if(req.body){
             const { page, pageSize, sortOrder } = req.body;
         
-            const users = await Users.getAll(
+            users = await Users.getAll(
                 page || 1, 
                 pageSize , 
                 sortOrder || 'ASC'
