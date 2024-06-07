@@ -107,9 +107,25 @@ const updateUser = async (req, res) => {
         if (check) {
             return res.status(400).json({ success: false, message: "Username already exists." });
         }
-        const hashed = await hashedPassword(MatKhau);
-        const updateUser = await Users.update({HoTen,Email,SoDienThoai,TenTaiKhoan,MatKhau:hashed}, MaNguoiDung);
-        res.status(200).json(updateUser);
+        // Tạo đối tượng cập nhật
+        const updateData = {};
+        if (HoTen) updateData.HoTen = HoTen;
+        if (Email) updateData.Email = Email;
+        if (SoDienThoai) updateData.SoDienThoai = SoDienThoai;
+        if (TenTaiKhoan) updateData.TenTaiKhoan = TenTaiKhoan;
+        if (MatKhau) {
+            const hashed = await hashedPassword(MatKhau);
+            updateData.MatKhau = hashed;
+        }
+
+        // Cập nhật thông tin người dùng
+        const updatedRows = await Users.update(updateData,MaNguoiDung);
+
+        if (!updatedRows) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
+        res.status(200).json({ success: true, message: "User updated successfully.",updatedRows});
     } catch (error) {
         res.status(500).json(error);
     }

@@ -2,7 +2,7 @@ import { DB_CONFID } from "../configs/db.config.js";
 import QuanLy from "../models/quanly.model.js";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/auth.js";
 // import { DB_CONFID } from '../configs/db.config.js';
-import { comparePassword} from "../utils/password.js";
+// import { comparePassword} from "../utils/password.js";
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -10,7 +10,8 @@ dotenv.config();
 const getGiangVienById = async (req, res) => {
     try {
         const role = req.decoded.role;
-        if (role!== DB_CONFID.resourses.admin.role || role==DB_CONFID.resourses.giangvien.role) {
+
+        if (role!== DB_CONFID.resourses.admin.role && role!==DB_CONFID.resourses.giangvien.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
         const MaQuanLy = req.params.MaQuanLy;
@@ -47,28 +48,29 @@ const updateGiangVien = async (req, res) => {
         if (check) {
             return res.status(400).json({ success: false, message: "Username already exists." });
         }
-        const hashed = await hashedPassword(MatKhau);
-        const updatedGiangVien = await QuanLy.update({HoTen,Email,SoDienThoai,TenTaiKhoan,MatKhau:hashed}, MaQuanLy);
-        res.status(200).json(updatedGiangVien);
+        // Tạo đối tượng cập nhật
+        let updateData = {};
+        if (HoTen) updateData.HoTen = HoTen;
+        if (Email) updateData.Email = Email;
+        if (SoDienThoai) updateData.SoDienThoai = SoDienThoai;
+        if (TenTaiKhoan) updateData.TenTaiKhoan = TenTaiKhoan;
+        if (MatKhau) {
+            const hashed = await hashedPassword(MatKhau);
+            updateData.MatKhau = hashed;
+        }
+
+        // Cập nhật thông tin quản lý
+        const updatedRows = await QuanLy.update(updateData, MaQuanLy);
+        if (!updatedRows) {
+            return res.status(404).json({ success: false, message: "Giang Vien not found." });
+        }
+
+        res.status(200).json({ success: true, message: "Giang Vien updated successfully.",updatedRows });
     } catch (error) {
         res.status(500).json({
             msg: error.message,
             stack: error.stack
         });
-    }
-};
-
-const deleteGiangVien = async (req, res) => {
-    try {
-        const role = req.decoded.role;
-        if (!role || role === DB_CONFID.resourses.user.role) {
-            return res.status(401).json({ msg: 'Unauthorized!', success: false });
-        }
-        const MaQuanLy = req.params.MaQuanLy;
-        const deletedGiangVien = await QuanLy.delete(MaQuanLy);
-        res.status(200).json(deletedGiangVien);
-    } catch (error) {
-        res.status({msg: error.message,stack: error.stack})
     }
 };
 
@@ -83,7 +85,9 @@ const requestRefreshTokenGiangVien = async (req, res) => {
         if (!giangvien) {
             return res.status(404).json({ msg: 'Refresh token not found!' });
         }
-        const role = await QuanLy.getRoleById(giangvien.MaQuanLy);
+        console.log(giangvien.info.MaQuanLy);
+        const checkRole = await QuanLy.getRoleById(giangvien.info.MaQuanLy);
+        const role = checkRole.TenVaiTro;
         if (role !== 'GiangVien') {
             return res.status(403).json({ msg: 'Unauthorized role!', success: false });
         }
@@ -97,4 +101,4 @@ const requestRefreshTokenGiangVien = async (req, res) => {
     }
 };
 
-export { getGiangVienById, updateGiangVien, deleteGiangVien, requestRefreshTokenGiangVien };
+export { getGiangVienById, updateGiangVien,  requestRefreshTokenGiangVien };

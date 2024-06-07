@@ -150,7 +150,6 @@ const updateAdmin = async (req, res) => {
         }
         const MaQuanLy = req.params.MaQuanLy;
         const {HoTen,Email,SoDienThoai,TenTaiKhoan,MatKhau} = req.body;
-
         let check = await QuanLy.findOne({ Email });
         if (check) {
             return res.status(400).json({ success: false, message: "Email already exists." });
@@ -165,9 +164,26 @@ const updateAdmin = async (req, res) => {
         if (check) {
             return res.status(400).json({ success: false, message: "Username already exists." });
         }
-        const hashed = await hashedPassword(MatKhau);
-        const updatedAdmin = await QuanLy.update({HoTen,Email,SoDienThoai,TenTaiKhoan,MatKhau:hashed}, MaQuanLy);
-        res.status(200).json(updatedAdmin);
+        // Tạo đối tượng cập nhật
+        let updateData = {};
+        if (HoTen) updateData.HoTen = HoTen;
+        console.log(updateData);
+        if (Email) updateData.Email = Email;
+        if (SoDienThoai) updateData.SoDienThoai = SoDienThoai;
+        if (TenTaiKhoan) updateData.TenTaiKhoan = TenTaiKhoan;
+        if (MatKhau) {
+            const hashed = await hashedPassword(MatKhau);
+            updateData.MatKhau = hashed;
+        }
+
+        // Cập nhật thông tin quản lý
+        const updatedRows = await QuanLy.update(updateData, MaQuanLy);
+        console.log(updatedRows);
+        if (!updatedRows) {
+            return res.status(404).json({ success: false, message: "Admin not found." });
+        }
+
+        res.status(200).json({ success: true, message: "Admin updated successfully.",updatedRows });
     } catch (error) {
         res.status(500).json({
             msg: error.message,
@@ -230,7 +246,8 @@ const requestRefreshTokenAdmin =async (req, res) => {
         if (!admin) {
             return res.status(404).json({ msg: 'Refresh token not found!' });
         }
-        const checkRole = await QuanLy.getRoleById(admin.MaQuanLy);
+        console.log(admin);
+        const checkRole = await QuanLy.getRoleById(admin.info.MaQuanLy);
         const role = checkRole.TenVaiTro;
         if (role !== 'Admin') {
             return res.status(403).json({ msg: 'Unauthorized role!', success: false });

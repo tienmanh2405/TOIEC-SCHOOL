@@ -19,12 +19,12 @@ const login = async (req, res) => {
         }
         const checkRole = await QuanLy.getRoleById(quanly.MaQuanLy);
         const role = checkRole.TenVaiTro;
-        if (role !== 'Admin' || role !== 'GiangVien') {
+        if (role !== 'Admin' && role !== 'GiangVien') {
             return res.status(403).json({ msg: 'Unauthorized role!', success: false });
         }
         const accessToken = generateAccessToken(quanly, role);
         const refreshToken = generateRefreshToken(quanly, role);
-        res.status(200).json({ msg: 'Login successfully!', success: true, accessToken, refreshToken, quanly });
+        res.status(200).json({ msg: 'Login successfully!', success: true, accessToken, refreshToken, quanly, role });
     } catch (error) {
         res.status(500).json({
             msg: error.message,
