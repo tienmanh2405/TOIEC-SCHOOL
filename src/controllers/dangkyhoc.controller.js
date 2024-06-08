@@ -38,21 +38,6 @@ const getDangKyHocById = async (req, res) => {
 const createDangKyHoc = async (req, res) => {
     try {
         const { HoTen, Email, SoDienThoai, MaKhoaHoc, MaCoSo, MaNguoiDung } = req.body;
-        
-        let check = await KhoaHoc.findOne({ MaKhoaHoc });
-        if (check) {
-            return res.status(400).json({ success: false, message: "MaKhoaHoc already exists." });
-        }
-
-        check = await CoSoDaoTao.findOne({ MaCoSo });
-        if (check) {
-            return res.status(400).json({ success: false, message: "MaCoSo already exists." });
-        }
-
-        check = await Users.findOne({ MaNguoiDung });
-        if (check) {
-            return res.status(400).json({ success: false, message: "MaNguoiDung already exists." });
-        }
 
         const newDangKyHoc = {
             HoTen,
@@ -60,7 +45,8 @@ const createDangKyHoc = async (req, res) => {
             SoDienThoai,
             MaKhoaHoc,
             MaCoSo,
-            MaNguoiDung
+            MaNguoiDung,
+            TrangThaiThanhToan: false // Thêm cột này khi tạo mới
         };
 
         const createdDangKyHoc = await DangKyHoc.create(newDangKyHoc);
@@ -72,7 +58,7 @@ const createDangKyHoc = async (req, res) => {
 
 const updateDangKyHoc = async (req, res) => {
     try {
-        const { HoTen, Email, SoDienThoai, MaKhoaHoc, MaCoSo, MaNguoiDung } = req.body;
+        const { HoTen, Email, SoDienThoai, MaKhoaHoc, MaCoSo, MaNguoiDung, TrangThaiThanhToan } = req.body;
 
         let updateData = {};
         if (HoTen) updateData.HoTen = HoTen;
@@ -81,6 +67,7 @@ const updateDangKyHoc = async (req, res) => {
         if (MaKhoaHoc) updateData.MaKhoaHoc = MaKhoaHoc;
         if (MaCoSo) updateData.MaCoSo = MaCoSo;
         if (MaNguoiDung) updateData.MaNguoiDung = MaNguoiDung;
+        if (TrangThaiThanhToan !== undefined) updateData.TrangThaiThanhToan = TrangThaiThanhToan;
 
         const updatedDangKyHoc = await DangKyHoc.update(updateData, req.params.id);
         res.status(200).json({ success: true, data: updatedDangKyHoc });
@@ -100,7 +87,8 @@ const deleteDangKyHoc = async (req, res) => {
 
 const createPaymentIntent = async (req, res) => {
     try {
-        const { MaKhoaHoc, MaQuanLy } = req.body;
+        console.log(req.body);
+        const { MaKhoaHoc, HoTen, Email, SoDienThoai, MaCoSo, MaNguoiDung } = req.body;
         
         // Check if the course exists
         const course = await KhoaHoc.getById(MaKhoaHoc);
@@ -108,16 +96,30 @@ const createPaymentIntent = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Course not found' });
         }
 
+        // Create a new DangKyHoc record with status 'chua thanh toan'
+        const newDangKyHoc = {
+            HoTen,
+            Email,
+            SoDienThoai,
+            MaKhoaHoc,
+            MaCoSo,
+            MaNguoiDung,
+            TrangThaiThanhToan: false // Adding the payment status field
+        };
+
+        const createdDangKyHoc = await DangKyHoc.create(newDangKyHoc);
+
         // Create a payment intent with Stripe
         const paymentIntent = await stripe.paymentIntents.create({
             amount: course.GiaThanh * 100, // amount in cents
             currency: 'usd',
-            metadata: { MaKhoaHoc, MaQuanLy },
+            metadata: { MaKhoaHoc, MaDangKy: createdDangKyHoc.MaDangKy },
         });
-
+        
         res.status(200).json({
             success: true,
             clientSecret: paymentIntent.client_secret,
+            DangKyHoc: createdDangKyHoc,
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

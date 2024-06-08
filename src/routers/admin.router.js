@@ -24,9 +24,6 @@ router.delete('/delete/:MaQuanLy', verify, deleteAdmin);
 // Update an admin by ID (requires authentication)
 router.put('/update/:MaQuanLy', verify, updateAdmin);
 
-// Admin login
-// router.post('/login', validation(loginSchema), loginAdmin);
-
 // Request a new access token using a refresh token
 router.post('/auth/refresh-token', requestRefreshTokenAdmin);
 

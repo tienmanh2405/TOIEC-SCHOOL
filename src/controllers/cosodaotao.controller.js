@@ -22,7 +22,7 @@ const getCoSoDaoTaoById = async (req, res) => {
 const createCoSoDaoTao = async (req, res) => {
     try {
         const roleAdmin = req.decoded.role;
-        if (!roleAdmin && roleAdmin!== DB_CONFID.resourses.admin.role) {
+        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
         const newCoSoDaoTao = await CoSoDaoTao.create(req.body);
@@ -35,7 +35,7 @@ const createCoSoDaoTao = async (req, res) => {
 const updateCoSoDaoTao = async (req, res) => {
     try {
         const roleAdmin = req.decoded.role;
-        if (!roleAdmin && roleAdmin!== DB_CONFID.resourses.admin.role) {
+        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
 
@@ -49,7 +49,7 @@ const updateCoSoDaoTao = async (req, res) => {
 const deleteCoSoDaoTao = async (req, res) => {
     try {
         const roleAdmin = req.decoded.role;
-        if (!roleAdmin && roleAdmin!== DB_CONFID.resourses.admin.role) {
+        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
         

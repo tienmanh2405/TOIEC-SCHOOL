@@ -65,20 +65,22 @@ const getById = (table,dataId, id) => {
     });
 }
 
-const create = (table,newUser) => {
+const create = (table, newUser) => {
     return new Promise((resolve, reject) => {
-        const keyNewUser = Object.keys(newUser).map(key => `${key}`).join(', ');
-        const valuesNewUser = Object.values(newUser).map(value => `"${value}"`).join(', ');
-        const query = `INSERT INTO ${table}(${keyNewUser}) values(${valuesNewUser})`;
-        db.query(query, newUser, (err, result) => {
+        const keys = Object.keys(newUser).join(', ');
+        const placeholders = Object.keys(newUser).map(() => '?').join(', ');
+        const values = Object.values(newUser);
+        const query = `INSERT INTO ${table}(${keys}) VALUES(${placeholders})`;
+        
+        db.query(query, values, (err, result) => {
             if (err) {
                 reject(err);
             } else {
-                resolve({id: result.insertId, ...newUser});
+                resolve({ id: result.insertId, ...newUser });
             }
         });
     });
-}
+};
 
 const updateById = (table,update, tableId, id) => {
     return new Promise((resolve, reject) => {

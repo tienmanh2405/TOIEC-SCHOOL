@@ -10,19 +10,19 @@ dotenv.config();
 const getAdmins = async (req, res) => {
     try {
         const roleAdmin = req.decoded.role;
-        if (!roleAdmin && roleAdmin!== DB_CONFID.resourses.admin.role) {
+        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
         let role = 1;//role ung voi admin
         let admins = await QuanLy.getAllByRole(role);
-        if(req.body){
-            const {page, pageSize, sortOrder } = req.body;
-            admins = await QuanLy.getByRole(role, page||1, pageSize, sortOrder||'ASC');
-            return res.status(200).json({
-                msg: 'Get admins successfully!',
-                data: admins
-            });
-        }   
+        // if(req.body && Object.keys(req.body).length !== 0){
+        //     const {page, pageSize, sortOrder } = req.body;
+        //     admins = await QuanLy.getByRole(role, page||1, pageSize, sortOrder||'ASC');
+        //     return res.status(200).json({
+        //         msg: 'Get admins successfully!',
+        //         data: admins
+        //     });
+        // }   
         res.status(200).json({ msg: 'admin successfully', data: admins });
     } catch (error) {
         res.status(500).json({
@@ -35,7 +35,7 @@ const getAdmins = async (req, res) => {
 const getGiangViens = async (req, res) => {
     try {
         const roleAdmin = req.decoded.role;
-        if (!roleAdmin && roleAdmin!== DB_CONFID.resourses.admin.role) {
+        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
         let role = 2; // role ung voi giang vien
@@ -60,7 +60,7 @@ const getGiangViens = async (req, res) => {
 const getAdminById = async (req, res) => {
     try {
         const roleAdmin = req.decoded.role;
-        if (!roleAdmin && roleAdmin!== DB_CONFID.resourses.admin.role) {
+        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
         const MaQuanLy = req.params.MaQuanLy;
@@ -77,7 +77,7 @@ const getAdminById = async (req, res) => {
 const createAdmin = async (req, res) => {
     try {
         const roleAdmin = req.decoded.role;
-        if (roleAdmin!== DB_CONFID.resourses.admin.role) {
+        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
         const { HoTen, Email, SoDienThoai, TenTaiKhoan, MatKhau } = req.body;
@@ -114,6 +114,10 @@ const createAdmin = async (req, res) => {
 
 const createGiangVien = async (req, res) => {
     try {
+        const roleAdmin = req.decoded.role;
+        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
+            return res.status(401).json({ msg: 'Unauthorized!', success: false });
+        }
         const { HoTen, Email, SoDienThoai, TenTaiKhoan, MatKhau } = req.body;
 
         let checkGiangVien = await QuanLy.findOne({ Email });
@@ -145,7 +149,7 @@ const createGiangVien = async (req, res) => {
 const updateAdmin = async (req, res) => {
     try {
         const roleAdmin = req.decoded.role;
-        if (!roleAdmin && roleAdmin!== DB_CONFID.resourses.admin.role) {
+        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
         const MaQuanLy = req.params.MaQuanLy;
@@ -195,7 +199,7 @@ const updateAdmin = async (req, res) => {
 const deleteAdmin = async (req, res) => {
     try {
         const roleAdmin = req.decoded.role;
-        if (!roleAdmin && roleAdmin!== DB_CONFID.resourses.admin.role) {
+        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
         const MaQuanLy = req.params.MaQuanLy;
@@ -209,32 +213,6 @@ const deleteAdmin = async (req, res) => {
     }
 };
 
-const loginAdmin = async (req, res) => {
-    try {
-        const { Email, MatKhau } = req.body;
-        const admin = await QuanLy.findOne({ Email });
-        if (!admin) {
-            return res.status(404).json({ msg: 'Admin not found!', success: false });
-        }
-        const checkMatKhau = await comparePassword(MatKhau, admin.MatKhau);
-        if (!checkMatKhau) {
-            return res.status(401).json({ msg: 'Incorrect password!', success: false });
-        }
-        const checkRole = await QuanLy.getRoleById(admin.MaQuanLy);
-        const role = checkRole.TenVaiTro;
-        if (role !== 'Admin') {
-            return res.status(403).json({ msg: 'Unauthorized role!', success: false });
-        }
-        const accessToken = generateAccessToken(admin, role);
-        const refreshToken = generateRefreshToken(admin, role);
-        res.status(200).json({ msg: 'Login successfully!', success: true, accessToken, refreshToken, admin });
-    } catch (error) {
-        res.status(500).json({
-            msg: error.message,
-            stack: error.stack
-        });
-    }
-};
 
 const requestRefreshTokenAdmin =async (req, res) => {
     try {
@@ -262,4 +240,4 @@ const requestRefreshTokenAdmin =async (req, res) => {
     }
 };
 
-export { getAdmins, getAdminById, createAdmin, updateAdmin, deleteAdmin, loginAdmin, requestRefreshTokenAdmin,getGiangViens, createGiangVien };
+export { getAdmins, getAdminById, createAdmin, updateAdmin, deleteAdmin, requestRefreshTokenAdmin,getGiangViens, createGiangVien };

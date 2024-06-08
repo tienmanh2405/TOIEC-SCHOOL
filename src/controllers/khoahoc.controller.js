@@ -1,3 +1,4 @@
+import { DB_CONFID } from '../configs/db.config.js';
 import KhoaHoc from '../models/khoahoc.model.js';
 
 const getKhoaHocs = async (req, res) => {
@@ -33,17 +34,18 @@ const getKhoaHocById = async (req, res) => {
 
 const createKhoaHoc = async (req, res) => {
     try {
+        console.log(req.decoded);
         const roleAdmin = req.decoded.role;
-        if (!roleAdmin && roleAdmin!== DB_CONFID.resourses.admin.role) {
+        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
 
-        const {TenKhoaHoc, MoTa, ThoiLuong, ThoiLuongTrenLop, SiSoToiDa, GiaThanh } = req.body;
+        const {TenKhoaHoc, MoTa, TongSoBuoiHoc, ThoiLuongTrenLop, SiSoToiDa, GiaThanh } = req.body;
 
         const newKhoaHoc = {
             TenKhoaHoc,
             MoTa,
-            ThoiLuong,
+            TongSoBuoiHoc,
             ThoiLuongTrenLop,
             SiSoToiDa,
             GiaThanh
@@ -59,16 +61,16 @@ const createKhoaHoc = async (req, res) => {
 const updateKhoaHoc = async (req, res) => {
     try {
         const roleAdmin = req.decoded.role;
-        if (!roleAdmin && roleAdmin!== DB_CONFID.resourses.admin.role) {
+        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
 
-        const {TenKhoaHoc, MoTa, ThoiLuong, ThoiLuongTrenLop, SiSoToiDa, GiaThanh } = req.body;
+        const {TenKhoaHoc, MoTa, TongSoBuoiHoc, ThoiLuongTrenLop, SiSoToiDa, GiaThanh } = req.body;
 
         let updateData = {};
         if (TenKhoaHoc) updateData.TenKhoaHoc = TenKhoaHoc;
         if (MoTa) updateData.MoTa = MoTa;
-        if (ThoiLuong) updateData.ThoiLuong = ThoiLuong;
+        if (TongSoBuoiHoc) updateData.TongSoBuoiHoc = TongSoBuoiHoc;
         if (ThoiLuongTrenLop) updateData.ThoiLuongTrenLop = ThoiLuongTrenLop;
         if (SiSoToiDa) updateData.SiSoToiDa = SiSoToiDa;
         if (GiaThanh) updateData.GiaThanh = GiaThanh;
@@ -83,7 +85,7 @@ const updateKhoaHoc = async (req, res) => {
 const deleteKhoaHoc = async (req, res) => {
     try {
         const roleAdmin = req.decoded.role;
-        if (!roleAdmin && roleAdmin!== DB_CONFID.resourses.admin.role) {
+        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
         const khoahoc = await KhoaHoc.delete(req.params.id);
