@@ -11,18 +11,14 @@ const handleStripeWebhook = async (req, res) => {
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    // Handle the event
     if (event.type === 'payment_intent.succeeded') {
         const paymentIntent = event.data.object;
 
-        // Get the DangKyHocId from the paymentIntent metadata
-        const DangKyHocId = paymentIntent.metadata.DangKyHocId;
+        const MaDangKy = paymentIntent.metadata.MaDangKy;
 
-        // Update the DangKyHoc record to set the payment status to 'da thanh toan'
-        await DangKyHoc.update({ TrangThaiThanhToan: 'da thanh toan' }, DangKyHocId);
+        await DangKyHoc.update({ TrangThaiThanhToan: true }, MaDangKy);
     }
 
-    // Return a response to acknowledge receipt of the event
     res.json({ received: true });
 };
 

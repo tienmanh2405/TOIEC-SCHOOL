@@ -87,16 +87,13 @@ const deleteDangKyHoc = async (req, res) => {
 
 const createPaymentIntent = async (req, res) => {
     try {
-        console.log(req.body);
         const { MaKhoaHoc, HoTen, Email, SoDienThoai, MaCoSo, MaNguoiDung } = req.body;
         
-        // Check if the course exists
         const course = await KhoaHoc.getById(MaKhoaHoc);
         if (!course) {
             return res.status(404).json({ success: false, message: 'Course not found' });
         }
 
-        // Create a new DangKyHoc record with status 'chua thanh toan'
         const newDangKyHoc = {
             HoTen,
             Email,
@@ -104,22 +101,20 @@ const createPaymentIntent = async (req, res) => {
             MaKhoaHoc,
             MaCoSo,
             MaNguoiDung,
-            TrangThaiThanhToan: false // Adding the payment status field
+            TrangThaiThanhToan: false
         };
 
         const createdDangKyHoc = await DangKyHoc.create(newDangKyHoc);
-
         // Create a payment intent with Stripe
         const paymentIntent = await stripe.paymentIntents.create({
             amount: course.GiaThanh * 100, // amount in cents
             currency: 'usd',
-            metadata: { MaKhoaHoc, MaDangKy: createdDangKyHoc.MaDangKy },
+            metadata: { MaKhoaHoc, MaDangKy: createdDangKyHoc.id },
         });
-        
+        const updateClientSecret = await DangKyHoc.update({clientSecret: paymentIntent.client_secret},createdDangKyHoc.id);
         res.status(200).json({
             success: true,
-            clientSecret: paymentIntent.client_secret,
-            DangKyHoc: createdDangKyHoc,
+            DangKyHoc: updateClientSecret
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
