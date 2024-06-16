@@ -37,7 +37,13 @@ const getDangKyHocById = async (req, res) => {
 
 const createDangKyHoc = async (req, res) => {
     try {
-        const { HoTen, Email, SoDienThoai, MaKhoaHoc, MaCoSo, MaNguoiDung } = req.body;
+        const checkMaNguoiDung = req.decoded;
+        const MaNguoiDung = req.params.MaNguoiDung;
+        if(checkMaNguoiDung.MaNguoiDung !== MaNguoiDung){
+            return res.status(401).json({msg: 'You do not have permission to create this KhoaHoc!',success: false});
+            
+        }
+        const { HoTen, Email, SoDienThoai, MaKhoaHoc, MaCoSo} = req.body;
 
         const newDangKyHoc = {
             HoTen,

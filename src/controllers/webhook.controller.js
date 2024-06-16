@@ -16,10 +16,10 @@ const handleStripeWebhook = async (req, res) => {
 
         const MaDangKy = paymentIntent.metadata.MaDangKy;
 
-        await DangKyHoc.update({ TrangThaiThanhToan: true }, MaDangKy);
+        await DangKyHoc.update({ TrangThaiThanhToan: true, clientSecret : null }, MaDangKy);
     }
 
-    res.json({ received: true });
+    res.status(200).json({ received: true, success: true });
 };
 
 export { handleStripeWebhook };

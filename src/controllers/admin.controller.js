@@ -15,14 +15,14 @@ const getAdmins = async (req, res) => {
         }
         let role = 1;//role ung voi admin
         let admins = await QuanLy.getAllByRole(role);
-        // if(req.body && Object.keys(req.body).length !== 0){
-        //     const {page, pageSize, sortOrder } = req.body;
-        //     admins = await QuanLy.getByRole(role, page||1, pageSize, sortOrder||'ASC');
-        //     return res.status(200).json({
-        //         msg: 'Get admins successfully!',
-        //         data: admins
-        //     });
-        // }   
+        if(req.body){
+            const {page, pageSize, sortOrder } = req.body;
+            admins = await QuanLy.getByRole(role, page||1, pageSize, sortOrder||'ASC');
+            return res.status(200).json({
+                msg: 'Get admins successfully!',
+                data: admins
+            });
+        }   
         res.status(200).json({ msg: 'admin successfully', data: admins });
     } catch (error) {
         res.status(500).json({

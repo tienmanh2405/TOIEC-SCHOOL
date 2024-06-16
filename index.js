@@ -14,6 +14,7 @@ const app = express();
 
 app.use(express.json());
 app.use(express.raw({type: 'application/json'}));
+// app.use(cors());
 
 app.use(DB_CONFID.resourses.user.contextPath,userRouter);
 app.use(DB_CONFID.resourses.admin.contextPath,adminRouter);
