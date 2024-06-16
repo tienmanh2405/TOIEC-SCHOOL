@@ -163,7 +163,7 @@ const login = async (req, res) =>{
         }
         const accessToken = generateAccessToken(user,DB_CONFID.resourses.user.role);
         const refreshToken = generateRefreshToken(user,DB_CONFID.resourses.user.role);
-        res.status(200).json({msg: 'Login sussecfully!',success: true,accessToken,refreshToken, user: user});
+        res.status(200).json({msg: 'Login sussecfully!',success: true,accessToken,refreshToken, user: user, role: DB_CONFID.resourses.user.role});
     } catch (error) {
         res.status(500).json(error);
     }
