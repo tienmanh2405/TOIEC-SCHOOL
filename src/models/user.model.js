@@ -8,6 +8,7 @@ const Users = function(user) {
     this.SoDienThoai = user.SoDienThoai;
     this.TenTaiKhoan = user.TenTaiKhoan;
     this.MatKhau = user.MatKhau;
+    this.NgaySinh = user.NgaySinh
 }
 
 Users.getAll = async (page, pageSize, sortOrder = 'ASC') => {

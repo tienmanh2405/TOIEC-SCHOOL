@@ -1,6 +1,7 @@
 import { DB_CONFID } from "../configs/db.config.js";
 import QuanLy from "../models/quanly.model.js";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/auth.js";
+import { checkAge } from "../utils/checkAge.js";
 // import { DB_CONFID } from '../configs/db.config.js';
 import { comparePassword, hashedPassword } from "../utils/password.js";
 import dotenv from 'dotenv';
@@ -77,10 +78,15 @@ const getAdminById = async (req, res) => {
 const createAdmin = async (req, res) => {
     try {
         const roleAdmin = req.decoded.role;
-        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
+        if (!roleAdmin || roleAdmin !== DB_CONFID.resourses.admin.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
-        const { HoTen, Email, SoDienThoai, TenTaiKhoan, MatKhau } = req.body;
+        const { HoTen, Email, SoDienThoai, TenTaiKhoan, MatKhau, NgaySinh } = req.body;
+
+        // Check age
+        if (!checkAge(NgaySinh)) {
+            return res.status(400).json({ success: false, message: "Age must be over 18." });
+        }
 
         let checkAdmin = await QuanLy.findOne({ Email });
         if (checkAdmin) {
@@ -98,11 +104,11 @@ const createAdmin = async (req, res) => {
         }
 
         const hashed = await hashedPassword(MatKhau);
-        const admin = await QuanLy.create({ HoTen, Email, SoDienThoai, TenTaiKhoan, MatKhau: hashed });
+        const admin = await QuanLy.create({ HoTen, Email, SoDienThoai, TenTaiKhoan, MatKhau: hashed, NgaySinh });
         if (!admin) {
             return res.status(500).json({ success: false, message: "An error occurred.", error });
         }
-        const updated = await QuanLy.updateRole('1',admin.id);
+        const updated = await QuanLy.updateRole('1', admin.id);
         if (!updated) {
             return res.status(500).json({ success: false, message: "An error occurred.", error });
         }
@@ -115,10 +121,15 @@ const createAdmin = async (req, res) => {
 const createGiangVien = async (req, res) => {
     try {
         const roleAdmin = req.decoded.role;
-        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
+        if (!roleAdmin || roleAdmin !== DB_CONFID.resourses.admin.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
-        const { HoTen, Email, SoDienThoai, TenTaiKhoan, MatKhau } = req.body;
+        const { HoTen, Email, SoDienThoai, TenTaiKhoan, MatKhau, NgaySinh } = req.body;
+
+        // Check age
+        if (!checkAge(NgaySinh)) {
+            return res.status(400).json({ success: false, message: "Age must be over 18." });
+        }
 
         let checkGiangVien = await QuanLy.findOne({ Email });
         if (checkGiangVien) {
@@ -136,7 +147,7 @@ const createGiangVien = async (req, res) => {
         }
 
         const hashed = await hashedPassword(MatKhau);
-        const giangvien = await QuanLy.create({ HoTen, Email, SoDienThoai, TenTaiKhoan, MatKhau: hashed });
+        const giangvien = await QuanLy.create({ HoTen, Email, SoDienThoai, TenTaiKhoan, MatKhau: hashed, NgaySinh });
         if (!giangvien) {
             return res.status(500).json({ success: false, message: "An error occurred.", error });
         }
@@ -153,7 +164,7 @@ const updateAdmin = async (req, res) => {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
         const MaQuanLy = req.params.MaQuanLy;
-        const {HoTen,Email,SoDienThoai,TenTaiKhoan,MatKhau} = req.body;
+        const {HoTen,Email,SoDienThoai,TenTaiKhoan,MatKhau, NgaySinh} = req.body;
         let check = await QuanLy.findOne({ Email });
         if (check) {
             return res.status(400).json({ success: false, message: "Email already exists." });
@@ -171,13 +182,18 @@ const updateAdmin = async (req, res) => {
         // Tạo đối tượng cập nhật
         let updateData = {};
         if (HoTen) updateData.HoTen = HoTen;
-        console.log(updateData);
         if (Email) updateData.Email = Email;
         if (SoDienThoai) updateData.SoDienThoai = SoDienThoai;
         if (TenTaiKhoan) updateData.TenTaiKhoan = TenTaiKhoan;
         if (MatKhau) {
             const hashed = await hashedPassword(MatKhau);
             updateData.MatKhau = hashed;
+        }
+        if(NgaySinh){
+            if (!checkAge(NgaySinh)) {
+                return res.status(400).json({ success: false, message: "Age must be over 18." });
+            }
+            updateData.NgaySinh = NgaySinh;
         }
 
         // Cập nhật thông tin quản lý

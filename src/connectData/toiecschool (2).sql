@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Jun 09, 2024 at 10:31 AM
+-- Generation Time: Jun 20, 2024 at 06:27 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,84 @@ SET time_zone = "+00:00";
 --
 -- Database: `toiecschool`
 --
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `taoLopHocVaThemHocVien` ()   BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE soLuongDangKy INT DEFAULT 0;
+    DECLARE siSoToiDa INT DEFAULT 0;
+    DECLARE maKhoaHocCur INT;
+    DECLARE maCoSoCur INT;
+    DECLARE maLopHoc INT;
+
+    -- Cursor để lấy các khóa học cần kiểm tra
+    DECLARE cur CURSOR FOR 
+        SELECT DISTINCT MaKhoaHoc, MaCoSo 
+        FROM DangKyHoc 
+        WHERE TrangThaiThanhToan = TRUE;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO maKhoaHocCur, maCoSoCur;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        -- Kiểm tra xem khóa học và cơ sở đã có lớp học chưa
+        SELECT MaLopHoc INTO maLopHoc
+        FROM LopHoc
+        WHERE MaKhoaHoc = maKhoaHocCur AND MaCoSo = maCoSoCur;
+
+        IF maLopHoc IS NULL THEN
+            -- Lấy số lượng đăng ký và sĩ số tối đa của khóa học
+            SELECT COUNT(dk.MaDangKy), MAX(kh.SiSoToiDa)
+            INTO soLuongDangKy, siSoToiDa
+            FROM DangKyHoc dk
+            JOIN KhoaHoc kh ON dk.MaKhoaHoc = kh.MaKhoaHoc
+            WHERE dk.MaKhoaHoc = maKhoaHocCur
+              AND dk.MaCoSo = maCoSoCur
+              AND dk.TrangThaiThanhToan = TRUE
+            GROUP BY dk.MaKhoaHoc;
+
+            -- Kiểm tra nếu số lượng đăng ký lớn hơn hoặc bằng 50% sĩ số tối đa
+            IF soLuongDangKy >= siSoToiDa / 2 THEN
+                -- Tạo lớp học mới
+                INSERT INTO LopHoc (MaKhoaHoc, MaCoSo, NgayBatDau, NgayDuKienKetThuc, TongSoBuoiHoc, ThoiLuongHocTrenLop, LichHocTrongTuan)
+                VALUES (maKhoaHocCur, maCoSoCur, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 2 MONTH), 20, 2, 'T2-T6');
+
+                -- Lấy mã lớp học mới tạo
+                SET maLopHoc = LAST_INSERT_ID();
+            END IF;
+        ELSE
+            -- Cập nhật thông tin lớp học nếu đã tồn tại
+            UPDATE LopHoc
+            SET NgayBatDau = CURDATE(),
+                NgayDuKienKetThuc = DATE_ADD(CURDATE(), INTERVAL 2 MONTH),
+                TongSoBuoiHoc = 20,
+                ThoiLuongHocTrenLop = 2,
+                LichHocTrongTuan = 'T2-T6'
+            WHERE MaLopHoc = maLopHoc;
+        END IF;
+
+        -- Thêm học viên vào lớp học
+        INSERT INTO HocVien (MaNguoiDung, HoTen, Email, MaLopHoc)
+        SELECT dk.MaNguoiDung, dk.HoTen, dk.Email, maLopHoc
+        FROM DangKyHoc dk
+        WHERE dk.MaKhoaHoc = maKhoaHocCur
+          AND dk.MaCoSo = maCoSoCur
+          AND dk.TrangThaiThanhToan = TRUE;
+    END LOOP;
+
+    CLOSE cur;
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -89,7 +167,18 @@ CREATE TABLE `dangkyhoc` (
 --
 
 INSERT INTO `dangkyhoc` (`MaDangKy`, `HoTen`, `Email`, `SoDienThoai`, `MaKhoaHoc`, `MaCoSo`, `MaNguoiDung`, `TrangThaiThanhToan`, `clientSecret`) VALUES
-(12, 'Ngô Hồng Sơn', 'minhtuan1@example.com', '789456125', 4, 1, 31, 0, 'pi_3PPgwCJUlGUSq9jK1hxaxAKA_secret_AIKoH4LIpJEa1PJXkAEDXt2g0');
+(12, 'Ngô Hồng Sơn', 'minhtuan1@example.com', '789456125', 2, 1, 31, 1, ''),
+(13, 'Hoàng Mai Anh', 'anhhoangmai@email.com', '0666666676', 2, 1, 34, 1, '');
+
+--
+-- Triggers `dangkyhoc`
+--
+DELIMITER $$
+CREATE TRIGGER `trg_after_insert_dangkyhoc` AFTER INSERT ON `dangkyhoc` FOR EACH ROW BEGIN
+    CALL taoLopHocVaThemHocVien();
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -121,6 +210,14 @@ CREATE TABLE `hocvien` (
   `MaLopHoc` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `hocvien`
+--
+
+INSERT INTO `hocvien` (`MaHocVien`, `MaNguoiDung`, `HoTen`, `Email`, `DiemDanh`, `DiemSo`, `NhanXet`, `MaLopHoc`) VALUES
+(1, 31, 'Ngô Hồng Sơn', 'minhtuan1@example.com', NULL, NULL, NULL, 11),
+(2, 34, 'Hoàng Mai Anh', 'anhhoangmai@email.com', NULL, NULL, NULL, 11);
+
 -- --------------------------------------------------------
 
 --
@@ -142,7 +239,7 @@ CREATE TABLE `khoahoc` (
 --
 
 INSERT INTO `khoahoc` (`MaKhoaHoc`, `TenKhoaHoc`, `MoTa`, `TongSoBuoiHoc`, `ThoiLuongTrenLop`, `SiSoToiDa`, `GiaThanh`) VALUES
-(2, 'TOEIC Basic', 'Khóa học cơ bản, phù hợp cho người mới bắt đầu làm quen với TOEIC.', 10, '3 giờ/buổi', 20, 129.00),
+(2, 'TOEIC Basic', 'Khóa học cơ bản, phù hợp cho người mới bắt đầu làm quen với TOEIC.', 10, '3 giờ/buổi', 2, 129.00),
 (4, 'TOEIC Intermediate', 'Khóa học trung cấp, dành cho những ai đã có kiến thức cơ bản về TOEIC.', 15, '3 giờ/buổi', 20, 193.50),
 (6, 'TOEIC Advanced', 'Khóa học nâng cao, giúp học viên đạt điểm số cao trong kỳ thi TOEIC.', 20, '3 giờ/buổi', 20, 260.00);
 
@@ -169,7 +266,7 @@ CREATE TABLE `lophoc` (
 --
 
 INSERT INTO `lophoc` (`MaLopHoc`, `NgayBatDau`, `NgayDuKienKetThuc`, `TongSoBuoiHoc`, `ThoiLuongHocTrenLop`, `LichHocTrongTuan`, `MaCoSo`, `MaKhoaHoc`, `MaGiangVien`) VALUES
-(2, '2024-06-08', '2024-06-22', 10, 3, '{\"thuHai\":\"17:00 - 20:00\",\"thuTu\":\"17:00 - 20:00\",\"thuSau\":\"17:00 - 20:00\"}', 1, 2, 12);
+(11, '2024-06-16', '2024-08-16', 20, 2, 'T2-T6', 1, 2, NULL);
 
 -- --------------------------------------------------------
 
@@ -179,28 +276,29 @@ INSERT INTO `lophoc` (`MaLopHoc`, `NgayBatDau`, `NgayDuKienKetThuc`, `TongSoBuoi
 
 CREATE TABLE `nguoidung` (
   `MaNguoiDung` int(11) NOT NULL,
-  `HoTen` varchar(255) DEFAULT NULL,
-  `Email` varchar(255) DEFAULT NULL,
+  `HoTen` varchar(50) DEFAULT NULL,
+  `Email` varchar(50) DEFAULT NULL,
   `SoDienThoai` varchar(20) DEFAULT NULL,
   `TenTaiKhoan` varchar(50) DEFAULT NULL,
-  `MatKhau` varchar(70) DEFAULT NULL
+  `MatKhau` varchar(70) DEFAULT NULL,
+  `NgaySinh` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `nguoidung`
 --
 
-INSERT INTO `nguoidung` (`MaNguoiDung`, `HoTen`, `Email`, `SoDienThoai`, `TenTaiKhoan`, `MatKhau`) VALUES
-(31, 'Ngô Hồng Sơn', 'minhtuan1@example.com', '789456125', 'user5', '$2b$10$4mnkkSgln3u2pGihtnBFouHUrALJGDoRdAdq6EJfZ4fvidiRRhZO.'),
-(32, 'Phạm Thị Lan', 'lanpham@email.com', '0666666674', 'lanpham', '$2b$10$/betsytPqMcYZ95jOJG8aul9ZDGTelRJBA85KuMA3Hr1hp4C8staC'),
-(33, 'Lê Minh Tuấn', 'tuanle@email.com', '0666666675', 'tuanle', '$2b$10$GZ75BsXrgVpl5BIXskOYeedngLFLDrrAotQ0veOFsA3SAyz.NUDu2'),
-(34, 'Hoàng Mai Anh', 'anhhoangmai@email.com', '0666666676', 'anhhoangmai', '$2b$10$ZeejXFUQgbKaK5Cya6p6C.IcuUC6fxRtDkIRLiWfTypls7slI89oW'),
-(35, 'Vũ Đức Minh', 'minhvuduc@email.com', '0666666677', 'minhvuduc', '$2b$10$SCCZfKf/KMHkKyktunQH6.8d13Etz2ZkCX0W.9YItSOnt7B7uYF8.'),
-(36, 'Nguyễn Thanh Tùng', 'tungnguyen@email.com', '0666666678', 'tungnguyen', '$2b$10$Zmm8gfhGnWSelGDohS6dbOLdMEdrIrF/TBL/PABaDkG56pa6VXqvC'),
-(37, 'Bùi Thu Hà', 'habui@email.com', '0666666679', 'habui', '$2b$10$hAA.RpjVGeQTEX0OexNZ3.It0HNA.yqmEfCKY4BVfpZ59epGfKrV.'),
-(39, 'Trần Lê Phương Trân', 'phuongtran@email.com', '0985743421', 'phuongtran', '$2b$10$GEVr3kT6pjQEweNniheBiOALVoXL/Lji126lXHXMZBAnQzOeu4pme'),
-(40, 'Phạm Văn Quân', 'vanquan@email.com', '0385743429', 'vanquan', '$2b$10$fUrDdbhwM4On/QtyReH9peM8OIQ8tvXbt0lFjWeKOMAoSsd41s7iu'),
-(41, 'Nguyễn Đình Thống', 'dinhthong0000@email.com', '0385743427', 'dinhthong1', '$2b$10$avN9UfBmHAPqXi8El8OSreBUz6wSxE4eAXilTjPdoPJGK7QXq9HGy');
+INSERT INTO `nguoidung` (`MaNguoiDung`, `HoTen`, `Email`, `SoDienThoai`, `TenTaiKhoan`, `MatKhau`, `NgaySinh`) VALUES
+(31, 'Ngô Hồng Sơn', 'minhtuan1@example.com', '789456125', 'user5', '$2b$10$4mnkkSgln3u2pGihtnBFouHUrALJGDoRdAdq6EJfZ4fvidiRRhZO.', NULL),
+(32, 'Phạm Thị Lan', 'lanpham@email.com', '0666666674', 'lanpham', '$2b$10$/betsytPqMcYZ95jOJG8aul9ZDGTelRJBA85KuMA3Hr1hp4C8staC', NULL),
+(33, 'Lê Minh Tuấn', 'tuanle@email.com', '0666666675', 'tuanle', '$2b$10$GZ75BsXrgVpl5BIXskOYeedngLFLDrrAotQ0veOFsA3SAyz.NUDu2', NULL),
+(34, 'Hoàng Mai Anh', 'anhhoangmai@email.com', '0666666676', 'anhhoangmai', '$2b$10$ZeejXFUQgbKaK5Cya6p6C.IcuUC6fxRtDkIRLiWfTypls7slI89oW', NULL),
+(35, 'Vũ Đức Minh', 'minhvuduc@email.com', '0666666677', 'minhvuduc', '$2b$10$SCCZfKf/KMHkKyktunQH6.8d13Etz2ZkCX0W.9YItSOnt7B7uYF8.', NULL),
+(36, 'Nguyễn Thanh Tùng', 'tungnguyen@email.com', '0666666678', 'tungnguyen', '$2b$10$Zmm8gfhGnWSelGDohS6dbOLdMEdrIrF/TBL/PABaDkG56pa6VXqvC', NULL),
+(37, 'Bùi Thu Hà', 'habui@email.com', '0666666679', 'habui', '$2b$10$hAA.RpjVGeQTEX0OexNZ3.It0HNA.yqmEfCKY4BVfpZ59epGfKrV.', NULL),
+(39, 'Trần Lê Phương Trân', 'phuongtran@email.com', '0985743421', 'phuongtran', '$2b$10$GEVr3kT6pjQEweNniheBiOALVoXL/Lji126lXHXMZBAnQzOeu4pme', NULL),
+(40, 'Phạm Văn Quân', 'vanquan@email.com', '0385743429', 'vanquan', '$2b$10$fUrDdbhwM4On/QtyReH9peM8OIQ8tvXbt0lFjWeKOMAoSsd41s7iu', NULL),
+(41, 'Nguyễn Đình Thống', 'dinhthong0000@email.com', '0385743427', 'dinhthong1', '$2b$10$avN9UfBmHAPqXi8El8OSreBUz6wSxE4eAXilTjPdoPJGK7QXq9HGy', NULL);
 
 -- --------------------------------------------------------
 
@@ -236,19 +334,20 @@ CREATE TABLE `quanly` (
   `Email` varchar(255) DEFAULT NULL,
   `SoDienThoai` varchar(20) DEFAULT NULL,
   `TenTaiKhoan` varchar(50) DEFAULT NULL,
-  `MatKhau` varchar(255) DEFAULT NULL
+  `MatKhau` varchar(255) DEFAULT NULL,
+  `NgaySinh` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `quanly`
 --
 
-INSERT INTO `quanly` (`MaQuanLy`, `HoTen`, `Email`, `SoDienThoai`, `TenTaiKhoan`, `MatKhau`) VALUES
-(3, 'Trần Lê Phương Trân', 'phuongtran0000@email.com', '0906512692', 'phuongtran1', '$2b$10$hz8VyvEs0e1bE1VjecWAoevup.BBJvqDEfw4lUfb8PkgayPsSMvDy'),
-(4, 'Trần Lê Phương Trân', 'phuongtran1111@email.com', '0906512691', 'phuongtran2', '$2b$10$d7PN7P4g7Nain0xr2qcFwet1GMWeUpveL6DwQfoseR1ff3NqjD0s.'),
-(9, 'Ngô Hồng Sơnn', 'minhtuan1@example.com', '789456125', 'hongson', '$2b$10$M5/PTopqgpQICSi.Vo963.oUub/ZhRsGzcYZ320Koe0XYjFeb4gYK'),
-(11, 'Nguyễn Đình Thống', 'dinhthong0000@email.com', '0385743427', 'dinhthong1', '$2b$10$GPln/iG5hT8NH3IvzuK2GOd.c3TZQ/JhbPA2UQlS8zxlyu7yNz1.i'),
-(12, 'Nguyễn Đình Thống', 'dinhthong0001@email.com', '0385743422', 'dinhthong2', '$2b$10$InWqzv73eM9XV8IXhKSJ5uZJBsa5qft4IQDr7oPDohktIZKMMdwpy');
+INSERT INTO `quanly` (`MaQuanLy`, `HoTen`, `Email`, `SoDienThoai`, `TenTaiKhoan`, `MatKhau`, `NgaySinh`) VALUES
+(3, 'Trần Lê Phương Trân', 'phuongtran0000@email.com', '0906512692', 'phuongtran1', '$2b$10$hz8VyvEs0e1bE1VjecWAoevup.BBJvqDEfw4lUfb8PkgayPsSMvDy', NULL),
+(4, 'Trần Lê Phương Trân', 'phuongtran1111@email.com', '0906512691', 'phuongtran2', '$2b$10$d7PN7P4g7Nain0xr2qcFwet1GMWeUpveL6DwQfoseR1ff3NqjD0s.', NULL),
+(9, 'Ngô Hồng Sơnn', 'minhtuan1@example.com', '789456125', 'hongson', '$2b$10$M5/PTopqgpQICSi.Vo963.oUub/ZhRsGzcYZ320Koe0XYjFeb4gYK', NULL),
+(11, 'Nguyễn Đình Thống', 'dinhthong0000@email.com', '0385743427', 'dinhthong1', '$2b$10$GPln/iG5hT8NH3IvzuK2GOd.c3TZQ/JhbPA2UQlS8zxlyu7yNz1.i', NULL),
+(12, 'Nguyễn Đình Thống', 'dinhthong0001@email.com', '0385743422', 'dinhthong2', '$2b$10$InWqzv73eM9XV8IXhKSJ5uZJBsa5qft4IQDr7oPDohktIZKMMdwpy', NULL);
 
 --
 -- Triggers `quanly`
@@ -422,7 +521,7 @@ ALTER TABLE `cosodaotao`
 -- AUTO_INCREMENT for table `dangkyhoc`
 --
 ALTER TABLE `dangkyhoc`
-  MODIFY `MaDangKy` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `MaDangKy` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `diemdanh`
@@ -434,7 +533,7 @@ ALTER TABLE `diemdanh`
 -- AUTO_INCREMENT for table `hocvien`
 --
 ALTER TABLE `hocvien`
-  MODIFY `MaHocVien` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `MaHocVien` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `khoahoc`
@@ -446,7 +545,7 @@ ALTER TABLE `khoahoc`
 -- AUTO_INCREMENT for table `lophoc`
 --
 ALTER TABLE `lophoc`
-  MODIFY `MaLopHoc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `MaLopHoc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `nguoidung`

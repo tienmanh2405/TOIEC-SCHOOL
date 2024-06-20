@@ -3,6 +3,7 @@ import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from ".
 import { DB_CONFID } from '../configs/db.config.js';
 import { comparePassword, hashedPassword } from "../utils/password.js";
 import dotenv from 'dotenv';
+import { checkAge } from "../utils/checkAge.js";
 
 dotenv.config();
 
@@ -46,7 +47,7 @@ const getUserById = async (req, res) => {
 
 const createUser = async (req, res) => {
     try {
-        const { HoTen, Email, SoDienThoai, TenTaiKhoan, MatKhau } = req.body;
+        const { HoTen, Email, SoDienThoai, TenTaiKhoan, MatKhau, NgaySinh } = req.body;
         
         // Check if email already exists
         let checkUser = await Users.findOne({ Email: Email });
@@ -65,12 +66,17 @@ const createUser = async (req, res) => {
         if (checkUser) {
             return res.status(400).json({ success: false, message: "Username already exists." });
         }
-        
+
+        // Check if age is over 18
+        if (!checkAge(NgaySinh)) {
+            return res.status(400).json({ success: false, message: "Age must be over 18." });
+        }
+
         // Hash the password
         const hashed = await hashedPassword(MatKhau);
         
         // Create a new user
-        const user = await Users.create({ HoTen, Email, SoDienThoai, TenTaiKhoan, MatKhau: hashed });
+        const user = await Users.create({ HoTen, Email, SoDienThoai, TenTaiKhoan, MatKhau: hashed, NgaySinh });
         
         // Send success response
         return res.status(201).json({ success: true, message: "User created successfully.", user });
@@ -91,7 +97,7 @@ const updateUser = async (req, res) => {
                 return;
             }
         }
-        const {HoTen,Email,SoDienThoai,TenTaiKhoan,MatKhau} = req.body;
+        const {HoTen,Email,SoDienThoai,TenTaiKhoan,MatKhau,NgaySinh} = req.body;
 
         let check = await Users.findOne({ Email });
         if (check) {
@@ -107,6 +113,7 @@ const updateUser = async (req, res) => {
         if (check) {
             return res.status(400).json({ success: false, message: "Username already exists." });
         }
+    
         // Tạo đối tượng cập nhật
         const updateData = {};
         if (HoTen) updateData.HoTen = HoTen;
@@ -117,6 +124,12 @@ const updateUser = async (req, res) => {
             const hashed = await hashedPassword(MatKhau);
             updateData.MatKhau = hashed;
         }
+        if (NgaySinh){
+            if (!checkAge(NgaySinh)) {
+                return res.status(400).json({ success: false, message: "Age must be over 18." });
+            }
+            updateData.NgaySinh = NgaySinh;
+        } 
 
         // Cập nhật thông tin người dùng
         const updatedRows = await Users.update(updateData,MaNguoiDung);

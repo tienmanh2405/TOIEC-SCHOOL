@@ -9,12 +9,12 @@ import lophocRouter from "./src/routers/lophoc.router.js"
 import khoahocRouter from "./src/routers/khoahoc.router.js"
 import dangkyhocRouter from "./src/routers/dangkyhoc.router.js"
 import webhookRouter from "./src/routers/webhook.router.js"
-
+import cors from 'cors';
 const app = express();
 
 app.use(express.json());
 app.use(express.raw({type: 'application/json'}));
-// app.use(cors());
+app.use(cors());
 
 app.use(DB_CONFID.resourses.user.contextPath,userRouter);
 app.use(DB_CONFID.resourses.admin.contextPath,adminRouter);
