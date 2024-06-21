@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Jun 20, 2024 at 06:27 AM
+-- Generation Time: Jun 21, 2024 at 04:15 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -231,17 +231,21 @@ CREATE TABLE `khoahoc` (
   `TongSoBuoiHoc` int(11) DEFAULT NULL,
   `ThoiLuongTrenLop` varchar(255) DEFAULT NULL,
   `SiSoToiDa` int(11) DEFAULT NULL,
-  `GiaThanh` decimal(18,2) DEFAULT NULL
+  `GiaThanh` decimal(18,2) DEFAULT NULL,
+  `HinhAnh` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `khoahoc`
 --
 
-INSERT INTO `khoahoc` (`MaKhoaHoc`, `TenKhoaHoc`, `MoTa`, `TongSoBuoiHoc`, `ThoiLuongTrenLop`, `SiSoToiDa`, `GiaThanh`) VALUES
-(2, 'TOEIC Basic', 'Khóa học cơ bản, phù hợp cho người mới bắt đầu làm quen với TOEIC.', 10, '3 giờ/buổi', 2, 129.00),
-(4, 'TOEIC Intermediate', 'Khóa học trung cấp, dành cho những ai đã có kiến thức cơ bản về TOEIC.', 15, '3 giờ/buổi', 20, 193.50),
-(6, 'TOEIC Advanced', 'Khóa học nâng cao, giúp học viên đạt điểm số cao trong kỳ thi TOEIC.', 20, '3 giờ/buổi', 20, 260.00);
+INSERT INTO `khoahoc` (`MaKhoaHoc`, `TenKhoaHoc`, `MoTa`, `TongSoBuoiHoc`, `ThoiLuongTrenLop`, `SiSoToiDa`, `GiaThanh`, `HinhAnh`) VALUES
+(2, 'TOEIC Basic', 'Khóa học cơ bản, phù hợp cho người mới bắt đầu làm quen với TOEIC.', 10, '3 giờ/buổi', 2, 129.00, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718978475/TOIECSCHOOL/toiec1.jpg'),
+(4, 'TOEIC Intermediate', 'Khóa học trung cấp, dành cho những ai đã có kiến thức cơ bản về TOEIC.', 15, '3 giờ/buổi', 20, 193.50, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718978527/TOIECSCHOOL/toiec4.jpg'),
+(6, 'TOEIC Advanced', 'Khóa học nâng cao, giúp học viên đạt điểm số cao trong kỳ thi TOEIC.', 20, '3 giờ/buổi', 20, 260.00, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718978579/TOIECSCHOOL/toiec5.jpg'),
+(12, 'TOEIC Speaking & Writing', 'Khóa học chuyên sâu vào kỹ năng nói và viết trong kỳ thi TOEIC.', 12, '2 giờ/buổi', 20, 180.00, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718979125/TOIECSCHOOL/toiec3.jpg'),
+(13, 'TOEIC Listening & Reading Part 1', 'Khóa học chuyên sâu vào kỹ năng nghe và đọc trong kỳ thi TOEIC.', 16, '2 giờ/buổi', 20, 250.00, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718979226/TOIECSCHOOL/toiec6.jpg'),
+(14, 'TOEIC Listening & Reading Part 2', 'Khóa học chuyên sâu vào kỹ năng nghe và đọc trong kỳ thi TOEIC.', 16, '2 giờ/buổi', 20, 250.00, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718979322/TOIECSCHOOL/toiec7.png');
 
 -- --------------------------------------------------------
 
@@ -539,7 +543,7 @@ ALTER TABLE `hocvien`
 -- AUTO_INCREMENT for table `khoahoc`
 --
 ALTER TABLE `khoahoc`
-  MODIFY `MaKhoaHoc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `MaKhoaHoc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `lophoc`
