@@ -1,9 +1,8 @@
 import { DB_CONFID } from "../configs/db.config.js";
 import QuanLy from "../models/quanly.model.js";
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/auth.js";
+import { generateAccessToken, verifyRefreshToken } from "../utils/auth.js";
 import { checkAge } from "../utils/checkAge.js";
-// import { DB_CONFID } from '../configs/db.config.js';
-import { comparePassword, hashedPassword } from "../utils/password.js";
+import { hashedPassword } from "../utils/password.js";
 import dotenv from 'dotenv';
 
 dotenv.config();

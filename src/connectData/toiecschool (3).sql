@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Jun 21, 2024 at 04:15 PM
+-- Generation Time: Jun 22, 2024 at 12:04 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -111,6 +111,37 @@ CREATE TABLE `baigiang` (
   `MaKhoaHoc` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `baigiang`
+--
+
+INSERT INTO `baigiang` (`MaBaiGiang`, `TenBaiGiang`, `MaKhoaHoc`) VALUES
+(1, 'Listening', 2),
+(2, 'Reading', 2);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `baikiemtra`
+--
+
+CREATE TABLE `baikiemtra` (
+  `MaBaiKiemTra` int(11) NOT NULL,
+  `TenBaiKiemTra` varchar(255) NOT NULL,
+  `MaKhoaHoc` int(11) DEFAULT NULL,
+  `ThoiGianBatDau` datetime DEFAULT NULL,
+  `ThoiGianKetThuc` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `baikiemtra`
+--
+
+INSERT INTO `baikiemtra` (`MaBaiKiemTra`, `TenBaiKiemTra`, `MaKhoaHoc`, `ThoiGianBatDau`, `ThoiGianKetThuc`) VALUES
+(1, 'Kiểm tra giữa kì', 2, '2024-06-23 16:24:24', '2024-07-31 16:24:24'),
+(3, 'Kiểm tra giữa kì', 4, '2024-06-23 16:28:19', '2024-07-31 16:28:19'),
+(4, 'Kiểm tra giữa kì', 13, '2024-06-23 16:28:55', '2024-07-31 16:28:55');
+
 -- --------------------------------------------------------
 
 --
@@ -122,6 +153,86 @@ CREATE TABLE `buoihoc` (
   `MaLopHoc` int(11) DEFAULT NULL,
   `NgayHoc` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cauhoi`
+--
+
+CREATE TABLE `cauhoi` (
+  `MaCauHoi` int(11) NOT NULL,
+  `MaBaiKiemTra` int(11) DEFAULT NULL,
+  `NoiDung` text DEFAULT NULL,
+  `LuaChon1` varchar(255) DEFAULT NULL,
+  `LuaChon2` varchar(255) DEFAULT NULL,
+  `LuaChon3` varchar(255) DEFAULT NULL,
+  `LuaChon4` varchar(255) DEFAULT NULL,
+  `DapAnDung` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cauhoi`
+--
+
+INSERT INTO `cauhoi` (`MaCauHoi`, `MaBaiKiemTra`, `NoiDung`, `LuaChon1`, `LuaChon2`, `LuaChon3`, `LuaChon4`, `DapAnDung`) VALUES
+(1, 1, 'What does the acronym TOEIC stand for?', 'Test of English for International Communication', 'Test of English in Commerce', 'Test of English in Context', 'Test of English for International Corporations', 'Test of English for International Communication'),
+(2, 1, 'Which part of the TOEIC test measures your ability to understand spoken English?', 'Listening Comprehension', 'Reading Comprehension', 'Speaking Skills', 'Writing Skills', 'Listening Comprehension'),
+(3, 1, 'How many sections are there in the TOEIC Listening and Reading test?', '2', '3', '4', '5', '2'),
+(4, 1, 'Which tense is used in the following sentence: \"He _____ to the cinema every Friday.\"', 'go', 'goes', 'going', 'gone', 'goes'),
+(5, 1, 'What is the opposite of the word \"careful\"?', 'careless', 'carefree', 'uncareful', 'unworried', 'careless'),
+(6, 1, 'Which sentence is grammatically correct?', 'She don\'t like tomatoes.', 'She doesn\'t like tomatoes.', 'She doesn\'t liked tomatoes.', 'She do not like tomatoes.', 'She doesn\'t like tomatoes.'),
+(7, 1, 'What is the plural form of \"child\"?', 'children', 'childs', 'childen', 'child', 'children'),
+(8, 1, 'Which word is a synonym for \"happy\"?', 'joyful', 'angry', 'sad', 'excited', 'joyful'),
+(9, 1, 'Who invented the telephone?', 'Alexander Graham Bell', 'Thomas Edison', 'Nikola Tesla', 'Albert Einstein', 'Alexander Graham Bell'),
+(10, 1, 'Which planet is known as the Red Planet?', 'Mars', 'Venus', 'Jupiter', 'Saturn', 'Mars'),
+(11, 3, 'Which element has the chemical symbol \"Fe\"?', 'Iron', 'Gold', 'Silver', 'Copper', 'Iron'),
+(12, 3, 'Who wrote the play \"Romeo and Juliet\"?', 'William Shakespeare', 'Charles Dickens', 'Jane Austen', 'Mark Twain', 'William Shakespeare'),
+(13, 3, 'What is the longest river in Europe?', 'Volga River', 'Danube River', 'Rhine River', 'Seine River', 'Volga River'),
+(14, 3, 'Who discovered penicillin in 1928?', 'Alexander Fleming', 'Louis Pasteur', 'Marie Curie', 'Thomas Edison', 'Alexander Fleming'),
+(15, 3, 'In which year did the Titanic sink?', '1912', '1908', '1920', '1930', '1912'),
+(16, 3, 'What is the capital city of Australia?', 'Canberra', 'Sydney', 'Melbourne', 'Brisbane', 'Canberra'),
+(17, 3, 'Who painted the Mona Lisa?', 'Leonardo da Vinci', 'Vincent van Gogh', 'Pablo Picasso', 'Michelangelo', 'Leonardo da Vinci'),
+(18, 3, 'Which planet is known as the \"Morning Star\" or \"Evening Star\"?', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Venus'),
+(19, 3, 'Who is the author of the novel \"1984\"?', 'George Orwell', 'Aldous Huxley', 'J.K. Rowling', 'F. Scott Fitzgerald', 'George Orwell'),
+(20, 3, 'What is the chemical formula for methane?', 'CH4', 'CO2', 'H2O', 'NH3', 'CH4'),
+(23, 4, 'What is the capital city of Japan?', 'Tokyo', 'Kyoto', 'Osaka', 'Nagoya', 'Tokyo'),
+(24, 4, 'Who discovered the theory of evolution?', 'Charles Darwin', 'Isaac Newton', 'Gregor Mendel', 'Albert Einstein', 'Charles Darwin'),
+(25, 4, 'What is the largest ocean on Earth?', 'Pacific Ocean', 'Atlantic Ocean', 'Indian Ocean', 'Arctic Ocean', 'Pacific Ocean'),
+(26, 4, 'Who wrote the novel \"To Kill a Mockingbird\"?', 'Harper Lee', 'Mark Twain', 'Charles Dickens', 'Jane Austen', 'Harper Lee'),
+(27, 4, 'What is the chemical symbol for gold?', 'Au', 'Ag', 'Fe', 'Cu', 'Au'),
+(28, 4, 'Who painted the ceiling of the Sistine Chapel?', 'Michelangelo', 'Leonardo da Vinci', 'Raphael', 'Titian', 'Michelangelo'),
+(29, 4, 'What is the largest desert in the world?', 'Sahara Desert', 'Arabian Desert', 'Gobi Desert', 'Kalahari Desert', 'Sahara Desert'),
+(30, 4, 'Who composed the famous opera \"The Magic Flute\"?', 'Wolfgang Amadeus Mozart', 'Ludwig van Beethoven', 'Johann Sebastian Bach', 'Franz Schubert', 'Wolfgang Amadeus Mozart'),
+(31, 4, 'What is the largest species of bear?', 'Polar bear', 'Grizzly bear', 'Brown bear', 'Black bear', 'Polar bear'),
+(32, 4, 'Who was the first person to step on the Moon?', 'Neil Armstrong', 'Buzz Aldrin', 'Michael Collins', 'Yuri Gagarin', 'Neil Armstrong');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `chitietbaigiang`
+--
+
+CREATE TABLE `chitietbaigiang` (
+  `MaChiTiet` int(11) NOT NULL,
+  `MaBaiGiang` int(11) DEFAULT NULL,
+  `TenNoiDung` varchar(50) DEFAULT NULL,
+  `NoiDung` text DEFAULT NULL,
+  `TaiLieu` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `chitietbaigiang`
+--
+
+INSERT INTO `chitietbaigiang` (`MaChiTiet`, `MaBaiGiang`, `TenNoiDung`, `NoiDung`, `TaiLieu`) VALUES
+(1, 1, 'Part 1', 'Thành thạo kỹ năng nghe các dạng hình tả người / tả vật.', NULL),
+(2, 1, 'Part 2', 'Thành thạo 12 dạng câu hỏi Listening Toeic Part 2', NULL),
+(3, 1, 'Part 3', 'Làm quen với các Topic phổ biến trong bài thi Part 3 TOEIC', NULL),
+(4, 1, 'Part 4', 'Kỹ năng nghe hiểu – nắm bắt thông tin chi tiết của bài độc thoại.', NULL),
+(5, 2, 'Part 1', 'Làm quen với các dạng bài TOEIC Reading, Cập nhật bộ từ vựng trong đề thi mỗi tháng', NULL),
+(6, 2, 'Part 2', 'Làm quen 4 dạng bài TOEIC, cập nhật các chủ đề trong đề thi mỗi tháng', NULL),
+(7, 2, 'Part 3', 'Làm quen 5 dạng bài TOEIC, kỹ năng Skim – Scan, nắm bắt thông tin chính của câu hỏi và tìm thông tin trong đoạn văn.', NULL);
 
 -- --------------------------------------------------------
 
@@ -414,11 +525,32 @@ ALTER TABLE `baigiang`
   ADD KEY `MaKhoaHoc` (`MaKhoaHoc`);
 
 --
+-- Indexes for table `baikiemtra`
+--
+ALTER TABLE `baikiemtra`
+  ADD PRIMARY KEY (`MaBaiKiemTra`),
+  ADD KEY `MaKhoaHoc` (`MaKhoaHoc`);
+
+--
 -- Indexes for table `buoihoc`
 --
 ALTER TABLE `buoihoc`
   ADD PRIMARY KEY (`MaBuoiHoc`),
   ADD KEY `MaLopHoc` (`MaLopHoc`);
+
+--
+-- Indexes for table `cauhoi`
+--
+ALTER TABLE `cauhoi`
+  ADD PRIMARY KEY (`MaCauHoi`),
+  ADD KEY `MaBaiKiemTra` (`MaBaiKiemTra`);
+
+--
+-- Indexes for table `chitietbaigiang`
+--
+ALTER TABLE `chitietbaigiang`
+  ADD PRIMARY KEY (`MaChiTiet`),
+  ADD KEY `MaBaiGiang` (`MaBaiGiang`);
 
 --
 -- Indexes for table `cosodaotao`
@@ -507,13 +639,31 @@ ALTER TABLE `vaitro`
 -- AUTO_INCREMENT for table `baigiang`
 --
 ALTER TABLE `baigiang`
-  MODIFY `MaBaiGiang` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `MaBaiGiang` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `baikiemtra`
+--
+ALTER TABLE `baikiemtra`
+  MODIFY `MaBaiKiemTra` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `buoihoc`
 --
 ALTER TABLE `buoihoc`
   MODIFY `MaBuoiHoc` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `cauhoi`
+--
+ALTER TABLE `cauhoi`
+  MODIFY `MaCauHoi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+
+--
+-- AUTO_INCREMENT for table `chitietbaigiang`
+--
+ALTER TABLE `chitietbaigiang`
+  MODIFY `MaChiTiet` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `cosodaotao`
@@ -586,10 +736,28 @@ ALTER TABLE `baigiang`
   ADD CONSTRAINT `baigiang_ibfk_1` FOREIGN KEY (`MaKhoaHoc`) REFERENCES `khoahoc` (`MaKhoaHoc`);
 
 --
+-- Constraints for table `baikiemtra`
+--
+ALTER TABLE `baikiemtra`
+  ADD CONSTRAINT `baikiemtra_ibfk_1` FOREIGN KEY (`MaKhoaHoc`) REFERENCES `khoahoc` (`MaKhoaHoc`);
+
+--
 -- Constraints for table `buoihoc`
 --
 ALTER TABLE `buoihoc`
   ADD CONSTRAINT `buoihoc_ibfk_1` FOREIGN KEY (`MaLopHoc`) REFERENCES `lophoc` (`MaLopHoc`);
+
+--
+-- Constraints for table `cauhoi`
+--
+ALTER TABLE `cauhoi`
+  ADD CONSTRAINT `cauhoi_ibfk_1` FOREIGN KEY (`MaBaiKiemTra`) REFERENCES `baikiemtra` (`MaBaiKiemTra`);
+
+--
+-- Constraints for table `chitietbaigiang`
+--
+ALTER TABLE `chitietbaigiang`
+  ADD CONSTRAINT `chitietbaigiang_ibfk_1` FOREIGN KEY (`MaBaiGiang`) REFERENCES `baigiang` (`MaBaiGiang`);
 
 --
 -- Constraints for table `dangkyhoc`

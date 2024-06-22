@@ -8,23 +8,18 @@ const router = express.Router();
 
 // Get admins
 router.get('/',verify, getAdmins);
-
 // Get admin by ID
 router.get('/:MaQuanLy',verify, getAdminById);
-
 // Register a new admin
 router.post('/register-admin', validation(registerSchema),verify , createAdmin);
+// Delete an admin by ID (requires authentication)
+router.delete('/delete/:MaQuanLy', verify, deleteAdmin);
+// Update an admin by ID (requires authentication)
+router.put('/update/:MaQuanLy', verify, updateAdmin);
+// Request a new access token using a refresh token
+router.post('/auth/refresh-token', requestRefreshTokenAdmin);
 
 // Register a new giangvien
 router.post('/register-giangvien', validation(registerSchema),verify , createGiangVien);
-
-// Delete an admin by ID (requires authentication)
-router.delete('/delete/:MaQuanLy', verify, deleteAdmin);
-
-// Update an admin by ID (requires authentication)
-router.put('/update/:MaQuanLy', verify, updateAdmin);
-
-// Request a new access token using a refresh token
-router.post('/auth/refresh-token', requestRefreshTokenAdmin);
 
 export default router;

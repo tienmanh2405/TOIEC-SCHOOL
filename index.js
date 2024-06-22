@@ -9,6 +9,9 @@ import lophocRouter from "./src/routers/lophoc.router.js"
 import khoahocRouter from "./src/routers/khoahoc.router.js"
 import dangkyhocRouter from "./src/routers/dangkyhoc.router.js"
 import webhookRouter from "./src/routers/webhook.router.js"
+import baikiemtraRouter from './src/routers/baikiemtra.routes.js';
+import baigiangRouter from './src/routers/baigiang.routes.js';
+import chitietbaigiangRouter from './src/routers/chitietbaigiang.routes.js';
 import cors from 'cors';
 const app = express();
 
@@ -24,6 +27,9 @@ app.use('/lophoc', lophocRouter);
 app.use('/khoahoc', khoahocRouter);
 app.use('/dangkyhoc', dangkyhocRouter);
 app.use('/webhook', webhookRouter);
+app.use('/baikiemtra', baikiemtraRouter);
+app.use('/baigiang', baigiangRouter);
+app.use('/chitietbaigiang', chitietbaigiangRouter);
 async function main() {
     try {
 
