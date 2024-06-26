@@ -1,60 +1,78 @@
-DELIMITER $$
+DELIMITER //
 
-CREATE PROCEDURE `taoLopHocVaThemHocVien` ()   
+CREATE PROCEDURE taoLopHocVaThemHocVien()
 BEGIN
     DECLARE done INT DEFAULT 0;
-    DECLARE maKhoaHoc INT;
-    DECLARE maCoSo INT;
-    DECLARE soLuongDangKy INT;
-    DECLARE siSoToiDa INT;
+    DECLARE soLuongDangKy INT DEFAULT 0;
+    DECLARE siSoToiDa INT DEFAULT 0;
+    DECLARE maKhoaHocCur INT;
+    DECLARE maCoSoCur INT;
     DECLARE maLopHoc INT;
+    DECLARE tongSoBuoiHoc INT;
+    DECLARE thoiLuongHocTrenLop INT;
 
-    -- Con trỏ để lấy các cặp khóa học và trung tâm phân biệt
+    -- Cursor to retrieve the courses to check
     DECLARE cur CURSOR FOR 
-        SELECT MaKhoaHoc, MaCoSo 
+        SELECT DISTINCT MaKhoaHoc, MaCoSo 
         FROM DangKyHoc 
-        WHERE TrangThaiThanhToan = TRUE 
-        GROUP BY MaKhoaHoc, MaCoSo;
-    
+        WHERE TrangThaiThanhToan = TRUE;
+
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
     OPEN cur;
 
     read_loop: LOOP
-        FETCH cur INTO maKhoaHoc, maCoSo;
+        FETCH cur INTO maKhoaHocCur, maCoSoCur;
         IF done THEN
             LEAVE read_loop;
         END IF;
 
-        -- Lấy số lượng đăng ký và giới hạn tối đa của lớp
-        SELECT COUNT(*), MAX(SiSoToiDa)
-        INTO soLuongDangKy, siSoToiDa
-        FROM DangKyHoc
-        JOIN KhoaHoc ON DangKyHoc.MaKhoaHoc = KhoaHoc.MaKhoaHoc
-        WHERE DangKyHoc.MaKhoaHoc = maKhoaHoc
-          AND DangKyHoc.MaCoSo = maCoSo
-          AND DangKyHoc.TrangThaiThanhToan = TRUE;
+        -- Retrieve course details
+        SELECT kh.SiSoToiDa, kh.TongSoBuoiHoc, kh.ThoiLuongTrenLop
+        INTO siSoToiDa, tongSoBuoiHoc, thoiLuongHocTrenLop
+        FROM KhoaHoc kh
+        WHERE kh.MaKhoaHoc = maKhoaHocCur;
 
-        -- Kiểm tra nếu số lượng đăng ký là 50% trở lên của giới hạn tối đa của lớp
-        IF soLuongDangKy >= siSoToiDa / 2 THEN
-            -- Tạo một lớp học mới
-            INSERT INTO LopHoc (MaKhoaHoc, MaCoSo, NgayBatDau, NgayDuKienKetThuc, TongSoBuoiHoc, ThoiLuongHocTrenLop, LichHocTrongTuan)
-            VALUES (maKhoaHoc, maCoSo, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 2 MONTH), 20, 2, 'T2-T6');
+        -- Check if there is an existing class with available seats
+        SELECT lh.MaLopHoc INTO maLopHoc
+        FROM LopHoc lh
+        LEFT JOIN (
+            SELECT MaLopHoc, COUNT(*) AS SoLuongHocVien
+            FROM HocVien
+            GROUP BY MaLopHoc
+        ) hv ON lh.MaLopHoc = hv.MaLopHoc
+        WHERE lh.MaKhoaHoc = maKhoaHocCur 
+          AND lh.MaCoSo = maCoSoCur
+          AND (siSoToiDa - IFNULL(hv.SoLuongHocVien, 0)) > 0
+        ORDER BY (siSoToiDa - IFNULL(hv.SoLuongHocVien, 0)) DESC
+        LIMIT 1;
 
-            -- Lấy ID của lớp học mới đã tạo
+        -- If no existing class or class is full, create a new class
+        IF maLopHoc IS NULL THEN
+            INSERT INTO LopHoc (MaKhoaHoc, MaCoSo, NgayBatDau, NgayDuKienKetThuc, TongSoBuoiHoc, ThoiLuongHocTrenLop)
+            VALUES (maKhoaHocCur, maCoSoCur, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 2 MONTH), tongSoBuoiHoc, thoiLuongHocTrenLop);
+
+            -- Get the new class ID
             SET maLopHoc = LAST_INSERT_ID();
-
-            -- Thêm học viên vào lớp học mới
-            INSERT INTO HocVien (MaNguoiDung, HoTen, Email, MaLopHoc)
-            SELECT MaNguoiDung, HoTen, Email, maLopHoc
-            FROM DangKyHoc
-            WHERE MaKhoaHoc = maKhoaHoc
-              AND MaCoSo = maCoSo
-              AND TrangThaiThanhToan = TRUE;
         END IF;
+
+        -- Add students to the class
+        INSERT INTO HocVien (MaNguoiDung, HoTen, Email, MaLopHoc)
+        SELECT dk.MaNguoiDung, dk.HoTen, dk.Email, maLopHoc
+        FROM DangKyHoc dk
+        WHERE dk.MaKhoaHoc = maKhoaHocCur
+          AND dk.MaCoSo = maCoSoCur
+          AND dk.TrangThaiThanhToan = TRUE;
+
+        -- Delete the entries from DangKyHoc after adding to HocVien
+        DELETE FROM DangKyHoc
+        WHERE MaKhoaHoc = maKhoaHocCur
+          AND MaCoSo = maCoSoCur
+          AND TrangThaiThanhToan = TRUE;
+
     END LOOP;
 
     CLOSE cur;
-END$$
+END
 
 DELIMITER ;
