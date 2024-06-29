@@ -37,6 +37,8 @@ export const DB_CONFID = {
         vaitro: "vaitro",
         chitietbaigiang: "chitietbaigiang",
         baikiemtra: "baikiemtra",
-        baigiang:"baigiang"
+        baigiang:"baigiang",
+        cauhoi: "cauhoi",
+        ketquabaikiemtra: "ketquabaikiemtra",
     }
 }

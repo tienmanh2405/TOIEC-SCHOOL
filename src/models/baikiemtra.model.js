@@ -3,9 +3,6 @@ import { create, deleteById, findOne, getAll, getById, updateById } from './data
 
 const BaiKiemTra = function(baikiemtra) {
     this.TenBaiKiemTra = baikiemtra.TenBaiKiemTra;
-    this.MaKhoaHoc = baikiemtra.MaKhoaHoc;
-    this.ThoiGianBatDau = baikiemtra.ThoiGianBatDau;
-    this.ThoiGianKetThuc = baikiemtra.ThoiGianKetThuc;
 };
 
 BaiKiemTra.getAll = async (page, pageSize, sortOrder = 'ASC') => {

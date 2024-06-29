@@ -136,6 +136,20 @@ const findOne = (table, finds) => {
         });
     });
 }
+const find = (table, finds) => {
+    return new Promise((resolve, reject) => {
+        const objectFind = Object.keys(finds).map(key => `${key} = ? `).join(' AND ');
+        const values = Object.values(finds);
+        const query = `SELECT * FROM ${table} WHERE ${objectFind}`;
+        db.query(query,values, (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+}
  
 const getInfoWithJoin = (table1,table2,nameInfo, nameJoin, idName, id) => {
     return new Promise((resolve, reject) => {
@@ -172,6 +186,7 @@ export {
     updateById,
     deleteById,
     findOne,
+    find,
     getInfoWithJoin,
     getByRole,
     updateRole

@@ -12,6 +12,7 @@ import webhookRouter from "./src/routers/webhook.router.js"
 import baikiemtraRouter from './src/routers/baikiemtra.routes.js';
 import baigiangRouter from './src/routers/baigiang.routes.js';
 import chitietbaigiangRouter from './src/routers/chitietbaigiang.routes.js';
+import cauhoiRouter from './src/routers/cauhoi.routes.js';
 import cors from 'cors';
 const app = express();
 
@@ -30,6 +31,8 @@ app.use('/webhook', webhookRouter);
 app.use('/baikiemtra', baikiemtraRouter);
 app.use('/baigiang', baigiangRouter);
 app.use('/chitietbaigiang', chitietbaigiangRouter);
+app.use('/cauhoi', cauhoiRouter);
+
 async function main() {
     try {
 

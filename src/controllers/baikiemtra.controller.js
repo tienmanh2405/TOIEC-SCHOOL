@@ -28,10 +28,17 @@ const getBaiKiemTras = async (req, res) => {
     }
 };
 
-const getBaiKiemTraByMaKhoaHoc = async (req, res) => {
+
+const getRandomIntInclusive = (min, max) => {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min; 
+};
+
+const getBaiKiemTraByMaBaiKiemTra = async (_, res) => {
     try {
-        const MaKhoaHoc = req.params.MaKhoaHoc;
-        const baikiemtra = await BaiKiemTra.getById(MaKhoaHoc);
+        const MaBaiKiemTra = getRandomIntInclusive(1, 4); //random lấy ra bài kiểm tra ngẫu nhiên
+        const baikiemtra = await BaiKiemTra.findOne({MaBaiKiemTra});
         if (!baikiemtra) {
             res.status(404).json({
                 success: false,
@@ -58,9 +65,8 @@ const createBaiKiemTra = async (req, res) => {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
 
-        const { TenBaiKiemTra, MaKhoaHoc, ThoiGianBatDau, ThoiGianKetThuc } = req.body;
-        const newBaiKiemTra = new BaiKiemTra({ TenBaiKiemTra, MaKhoaHoc, ThoiGianBatDau, ThoiGianKetThuc });
-        const createdBaiKiemTra = await BaiKiemTra.create(newBaiKiemTra);
+        const { TenBaiKiemTra } = req.body;
+        const createdBaiKiemTra = await BaiKiemTra.create({ TenBaiKiemTra });
         res.status(201).json({
             success: true,
             message: 'BaiKiemTra created successfully',
@@ -124,4 +130,4 @@ const updateBaiKiemTra = async (req, res) => {
     }
 };
 
-export { getBaiKiemTras,getBaiKiemTraByMaKhoaHoc, createBaiKiemTra, deleteBaiKiemTra, updateBaiKiemTra };
+export { getBaiKiemTras,getBaiKiemTraByMaBaiKiemTra, createBaiKiemTra, deleteBaiKiemTra, updateBaiKiemTra };

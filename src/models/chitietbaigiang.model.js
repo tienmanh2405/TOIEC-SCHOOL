@@ -1,5 +1,6 @@
+
 import { DB_CONFID } from '../configs/db.config.js';
-import { create, deleteById, findOne, getAll, getById, updateById } from './data.model.js';
+import { create, deleteById, findOne,find, getAll, getById, updateById } from './data.model.js';
 
 const ChiTietBaiGiang = function(chitietbaigiang) {
     this.MaBaiGiang = chitietbaigiang.MaBaiGiang;
@@ -36,5 +37,7 @@ ChiTietBaiGiang.update = async (newChiTietBaiGiang, id) => {
 ChiTietBaiGiang.findOne = async (finds) => {
     return await findOne(DB_CONFID.table.chitietbaigiang, finds);
 };
-
+ChiTietBaiGiang.findAll = async (finds) => {
+    return await find(DB_CONFID.table.chitietbaigiang, finds);
+};
 export default ChiTietBaiGiang;

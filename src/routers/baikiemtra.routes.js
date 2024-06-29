@@ -1,7 +1,7 @@
 import express from 'express';
 import {
     getBaiKiemTras,
-    getBaiKiemTraByMaKhoaHoc,
+    getBaiKiemTraByMaBaiKiemTra,
     createBaiKiemTra,
     deleteBaiKiemTra,
     updateBaiKiemTra
@@ -12,7 +12,7 @@ const router = express.Router();
 
 router.get('/', getBaiKiemTras);
 
-router.get('/:MaBaiKiemTra', getBaiKiemTraByMaKhoaHoc);
+router.get('/:MaBaiKiemTra', getBaiKiemTraByMaBaiKiemTra);
 
 router.post('/create', createBaiKiemTra);
 
