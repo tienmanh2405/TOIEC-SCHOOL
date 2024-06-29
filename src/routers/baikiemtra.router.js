@@ -12,7 +12,7 @@ const router = express.Router();
 
 router.get('/', getBaiKiemTras);
 
-router.get('/:MaBaiKiemTra', getBaiKiemTraByMaBaiKiemTra);
+router.get('/RandomBaiKiemTra', getBaiKiemTraByMaBaiKiemTra);
 
 router.post('/create', createBaiKiemTra);
 

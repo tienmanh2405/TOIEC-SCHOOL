@@ -9,10 +9,13 @@ import lophocRouter from "./src/routers/lophoc.router.js"
 import khoahocRouter from "./src/routers/khoahoc.router.js"
 import dangkyhocRouter from "./src/routers/dangkyhoc.router.js"
 import webhookRouter from "./src/routers/webhook.router.js"
-import baikiemtraRouter from './src/routers/baikiemtra.routes.js';
-import baigiangRouter from './src/routers/baigiang.routes.js';
-import chitietbaigiangRouter from './src/routers/chitietbaigiang.routes.js';
-import cauhoiRouter from './src/routers/cauhoi.routes.js';
+import baikiemtraRouter from './src/routers/baikiemtra.router.js';
+import baigiangRouter from './src/routers/baigiang.router.js';
+import chitietbaigiangRouter from './src/routers/chitietbaigiang.router.js';
+import cauhoiRouter from './src/routers/cauhoi.router.js';
+import buoiHocRouter from './src/routers/buoihoc.router.js';
+import diemDanhRouter from './src/routers/diemdanh.router.js';
+import hocVienRouter from './src/routers/hocvien.router.js';
 import cors from 'cors';
 const app = express();
 
@@ -32,7 +35,9 @@ app.use('/baikiemtra', baikiemtraRouter);
 app.use('/baigiang', baigiangRouter);
 app.use('/chitietbaigiang', chitietbaigiangRouter);
 app.use('/cauhoi', cauhoiRouter);
-
+app.use('/buoihoc', buoiHocRouter);
+app.use('/diemdanh', diemDanhRouter);
+app.use('/hocvien', hocVienRouter);
 async function main() {
     try {
 

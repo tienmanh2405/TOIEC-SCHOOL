@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Jun 22, 2024 at 12:04 PM
+-- Generation Time: Jun 29, 2024 at 02:55 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -32,8 +32,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `taoLopHocVaThemHocVien` ()   BEGIN
     DECLARE maKhoaHocCur INT;
     DECLARE maCoSoCur INT;
     DECLARE maLopHoc INT;
+    DECLARE tongSoBuoiHoc INT;
+    DECLARE thoiLuongHocTrenLop INT;
 
-    -- Cursor để lấy các khóa học cần kiểm tra
+    -- Cursor to retrieve the courses to check
     DECLARE cur CURSOR FOR 
         SELECT DISTINCT MaKhoaHoc, MaCoSo 
         FROM DangKyHoc 
@@ -49,49 +51,49 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `taoLopHocVaThemHocVien` ()   BEGIN
             LEAVE read_loop;
         END IF;
 
-        -- Kiểm tra xem khóa học và cơ sở đã có lớp học chưa
-        SELECT MaLopHoc INTO maLopHoc
-        FROM LopHoc
-        WHERE MaKhoaHoc = maKhoaHocCur AND MaCoSo = maCoSoCur;
+        -- Retrieve course details
+        SELECT kh.SiSoToiDa, kh.TongSoBuoiHoc, kh.ThoiLuongTrenLop
+        INTO siSoToiDa, tongSoBuoiHoc, thoiLuongHocTrenLop
+        FROM KhoaHoc kh
+        WHERE kh.MaKhoaHoc = maKhoaHocCur;
 
+        -- Check if there is an existing class with available seats
+        SELECT lh.MaLopHoc INTO maLopHoc
+        FROM LopHoc lh
+        LEFT JOIN (
+            SELECT MaLopHoc, COUNT(*) AS SoLuongHocVien
+            FROM HocVien
+            GROUP BY MaLopHoc
+        ) hv ON lh.MaLopHoc = hv.MaLopHoc
+        WHERE lh.MaKhoaHoc = maKhoaHocCur 
+          AND lh.MaCoSo = maCoSoCur
+          AND (siSoToiDa - IFNULL(hv.SoLuongHocVien, 0)) > 0
+        ORDER BY (siSoToiDa - IFNULL(hv.SoLuongHocVien, 0)) DESC
+        LIMIT 1;
+
+        -- If no existing class or class is full, create a new class
         IF maLopHoc IS NULL THEN
-            -- Lấy số lượng đăng ký và sĩ số tối đa của khóa học
-            SELECT COUNT(dk.MaDangKy), MAX(kh.SiSoToiDa)
-            INTO soLuongDangKy, siSoToiDa
-            FROM DangKyHoc dk
-            JOIN KhoaHoc kh ON dk.MaKhoaHoc = kh.MaKhoaHoc
-            WHERE dk.MaKhoaHoc = maKhoaHocCur
-              AND dk.MaCoSo = maCoSoCur
-              AND dk.TrangThaiThanhToan = TRUE
-            GROUP BY dk.MaKhoaHoc;
+            INSERT INTO LopHoc (MaKhoaHoc, MaCoSo, NgayBatDau, NgayDuKienKetThuc, TongSoBuoiHoc, ThoiLuongHocTrenLop)
+            VALUES (maKhoaHocCur, maCoSoCur, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 2 MONTH), tongSoBuoiHoc, thoiLuongHocTrenLop);
 
-            -- Kiểm tra nếu số lượng đăng ký lớn hơn hoặc bằng 50% sĩ số tối đa
-            IF soLuongDangKy >= siSoToiDa / 2 THEN
-                -- Tạo lớp học mới
-                INSERT INTO LopHoc (MaKhoaHoc, MaCoSo, NgayBatDau, NgayDuKienKetThuc, TongSoBuoiHoc, ThoiLuongHocTrenLop, LichHocTrongTuan)
-                VALUES (maKhoaHocCur, maCoSoCur, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 2 MONTH), 20, 2, 'T2-T6');
-
-                -- Lấy mã lớp học mới tạo
-                SET maLopHoc = LAST_INSERT_ID();
-            END IF;
-        ELSE
-            -- Cập nhật thông tin lớp học nếu đã tồn tại
-            UPDATE LopHoc
-            SET NgayBatDau = CURDATE(),
-                NgayDuKienKetThuc = DATE_ADD(CURDATE(), INTERVAL 2 MONTH),
-                TongSoBuoiHoc = 20,
-                ThoiLuongHocTrenLop = 2,
-                LichHocTrongTuan = 'T2-T6'
-            WHERE MaLopHoc = maLopHoc;
+            -- Get the new class ID
+            SET maLopHoc = LAST_INSERT_ID();
         END IF;
 
-        -- Thêm học viên vào lớp học
+        -- Add students to the class
         INSERT INTO HocVien (MaNguoiDung, HoTen, Email, MaLopHoc)
         SELECT dk.MaNguoiDung, dk.HoTen, dk.Email, maLopHoc
         FROM DangKyHoc dk
         WHERE dk.MaKhoaHoc = maKhoaHocCur
           AND dk.MaCoSo = maCoSoCur
           AND dk.TrangThaiThanhToan = TRUE;
+
+        -- Delete the entries from DangKyHoc after adding to HocVien
+        DELETE FROM DangKyHoc
+        WHERE MaKhoaHoc = maKhoaHocCur
+          AND MaCoSo = maCoSoCur
+          AND TrangThaiThanhToan = TRUE;
+
     END LOOP;
 
     CLOSE cur;
@@ -127,20 +129,18 @@ INSERT INTO `baigiang` (`MaBaiGiang`, `TenBaiGiang`, `MaKhoaHoc`) VALUES
 
 CREATE TABLE `baikiemtra` (
   `MaBaiKiemTra` int(11) NOT NULL,
-  `TenBaiKiemTra` varchar(255) NOT NULL,
-  `MaKhoaHoc` int(11) DEFAULT NULL,
-  `ThoiGianBatDau` datetime DEFAULT NULL,
-  `ThoiGianKetThuc` datetime DEFAULT NULL
+  `TenBaiKiemTra` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `baikiemtra`
 --
 
-INSERT INTO `baikiemtra` (`MaBaiKiemTra`, `TenBaiKiemTra`, `MaKhoaHoc`, `ThoiGianBatDau`, `ThoiGianKetThuc`) VALUES
-(1, 'Kiểm tra giữa kì', 2, '2024-06-23 16:24:24', '2024-07-31 16:24:24'),
-(3, 'Kiểm tra giữa kì', 4, '2024-06-23 16:28:19', '2024-07-31 16:28:19'),
-(4, 'Kiểm tra giữa kì', 13, '2024-06-23 16:28:55', '2024-07-31 16:28:55');
+INSERT INTO `baikiemtra` (`MaBaiKiemTra`, `TenBaiKiemTra`) VALUES
+(1, 'Kiểm tra giữa kì số 1'),
+(2, 'Bài kiểm tra số 4'),
+(3, 'Kiểm tra giữa kì số 2'),
+(4, 'Kiểm tra giữa kì số 3');
 
 -- --------------------------------------------------------
 
@@ -205,7 +205,17 @@ INSERT INTO `cauhoi` (`MaCauHoi`, `MaBaiKiemTra`, `NoiDung`, `LuaChon1`, `LuaCho
 (29, 4, 'What is the largest desert in the world?', 'Sahara Desert', 'Arabian Desert', 'Gobi Desert', 'Kalahari Desert', 'Sahara Desert'),
 (30, 4, 'Who composed the famous opera \"The Magic Flute\"?', 'Wolfgang Amadeus Mozart', 'Ludwig van Beethoven', 'Johann Sebastian Bach', 'Franz Schubert', 'Wolfgang Amadeus Mozart'),
 (31, 4, 'What is the largest species of bear?', 'Polar bear', 'Grizzly bear', 'Brown bear', 'Black bear', 'Polar bear'),
-(32, 4, 'Who was the first person to step on the Moon?', 'Neil Armstrong', 'Buzz Aldrin', 'Michael Collins', 'Yuri Gagarin', 'Neil Armstrong');
+(32, 4, 'Who was the first person to step on the Moon?', 'Neil Armstrong', 'Buzz Aldrin', 'Michael Collins', 'Yuri Gagarin', 'Neil Armstrong'),
+(33, 2, 'When we went back to the bookstore, the bookseller _______ the book we wanted.', 'sold', 'had sold', 'sells', 'has sold', 'had sold'),
+(34, 2, 'By the end of last summer, the farmers _______ all the crop.', 'harvested', 'had harvested', 'harvest', 'are harvested', 'had harvested'),
+(35, 2, 'If I _______ the answer, I would have told you.', 'knew', 'know', 'have known', 'had known', 'had known'),
+(36, 2, 'She _______ before I arrived.', 'left', 'has left', 'had left', 'leaves', 'had left'),
+(37, 2, 'When the police arrived, the thieves _______.', 'escaped', 'have escaped', 'had escaped', 'escape', 'had escaped'),
+(38, 2, 'By the time we got to the cinema, the movie _______.', 'started', 'has started', 'had started', 'starts', 'had started'),
+(39, 2, 'She _______ a cake when the guests arrived.', 'baked', 'was baking', 'has baked', 'had baked', 'was baking'),
+(40, 2, 'I will call you when I _______ back.', 'get', 'got', 'have got', 'getting', 'get'),
+(41, 2, 'If it _______ tomorrow, we will cancel the trip.', 'rains', 'rain', 'will rain', 'rained', 'rains'),
+(42, 2, 'They _______ their homework before the game started.', 'finished', 'finishes', 'finish', 'had finished', 'had finished');
 
 -- --------------------------------------------------------
 
@@ -274,14 +284,6 @@ CREATE TABLE `dangkyhoc` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `dangkyhoc`
---
-
-INSERT INTO `dangkyhoc` (`MaDangKy`, `HoTen`, `Email`, `SoDienThoai`, `MaKhoaHoc`, `MaCoSo`, `MaNguoiDung`, `TrangThaiThanhToan`, `clientSecret`) VALUES
-(12, 'Ngô Hồng Sơn', 'minhtuan1@example.com', '789456125', 2, 1, 31, 1, ''),
-(13, 'Hoàng Mai Anh', 'anhhoangmai@email.com', '0666666676', 2, 1, 34, 1, '');
-
---
 -- Triggers `dangkyhoc`
 --
 DELIMITER $$
@@ -315,7 +317,6 @@ CREATE TABLE `hocvien` (
   `MaNguoiDung` int(11) DEFAULT NULL,
   `HoTen` varchar(255) DEFAULT NULL,
   `Email` varchar(255) DEFAULT NULL,
-  `DiemDanh` varchar(50) DEFAULT NULL,
   `DiemSo` decimal(5,2) DEFAULT NULL,
   `NhanXet` text DEFAULT NULL,
   `MaLopHoc` int(11) DEFAULT NULL
@@ -325,9 +326,30 @@ CREATE TABLE `hocvien` (
 -- Dumping data for table `hocvien`
 --
 
-INSERT INTO `hocvien` (`MaHocVien`, `MaNguoiDung`, `HoTen`, `Email`, `DiemDanh`, `DiemSo`, `NhanXet`, `MaLopHoc`) VALUES
-(1, 31, 'Ngô Hồng Sơn', 'minhtuan1@example.com', NULL, NULL, NULL, 11),
-(2, 34, 'Hoàng Mai Anh', 'anhhoangmai@email.com', NULL, NULL, NULL, 11);
+INSERT INTO `hocvien` (`MaHocVien`, `MaNguoiDung`, `HoTen`, `Email`, `DiemSo`, `NhanXet`, `MaLopHoc`) VALUES
+(6, 31, 'Ngô Hồng Sơn', 'minhtuan1@example.com', NULL, NULL, 13),
+(7, 34, 'Hoàng Mai Anh', 'anhhoangmai@email.com', NULL, NULL, 13);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ketquabaikiemtra`
+--
+
+CREATE TABLE `ketquabaikiemtra` (
+  `MaKetQua` int(11) NOT NULL,
+  `MaBaiKiemTra` int(11) NOT NULL,
+  `MaHocVien` int(11) NOT NULL,
+  `Diem` decimal(5,2) NOT NULL,
+  `NgayThi` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `ketquabaikiemtra`
+--
+
+INSERT INTO `ketquabaikiemtra` (`MaKetQua`, `MaBaiKiemTra`, `MaHocVien`, `Diem`, `NgayThi`) VALUES
+(1, 1, 6, 10.00, '2024-06-29 17:12:39');
 
 -- --------------------------------------------------------
 
@@ -381,7 +403,7 @@ CREATE TABLE `lophoc` (
 --
 
 INSERT INTO `lophoc` (`MaLopHoc`, `NgayBatDau`, `NgayDuKienKetThuc`, `TongSoBuoiHoc`, `ThoiLuongHocTrenLop`, `LichHocTrongTuan`, `MaCoSo`, `MaKhoaHoc`, `MaGiangVien`) VALUES
-(11, '2024-06-16', '2024-08-16', 20, 2, 'T2-T6', 1, 2, NULL);
+(13, '2024-06-23', '2024-08-23', 20, 2, 'T2-T6', 1, 2, NULL);
 
 -- --------------------------------------------------------
 
@@ -528,8 +550,7 @@ ALTER TABLE `baigiang`
 -- Indexes for table `baikiemtra`
 --
 ALTER TABLE `baikiemtra`
-  ADD PRIMARY KEY (`MaBaiKiemTra`),
-  ADD KEY `MaKhoaHoc` (`MaKhoaHoc`);
+  ADD PRIMARY KEY (`MaBaiKiemTra`);
 
 --
 -- Indexes for table `buoihoc`
@@ -582,6 +603,14 @@ ALTER TABLE `hocvien`
   ADD PRIMARY KEY (`MaHocVien`),
   ADD KEY `MaLopHoc` (`MaLopHoc`),
   ADD KEY `MaNguoiDung` (`MaNguoiDung`);
+
+--
+-- Indexes for table `ketquabaikiemtra`
+--
+ALTER TABLE `ketquabaikiemtra`
+  ADD PRIMARY KEY (`MaKetQua`),
+  ADD KEY `MaBaiKiemTra` (`MaBaiKiemTra`),
+  ADD KEY `MaHocVien` (`MaHocVien`);
 
 --
 -- Indexes for table `khoahoc`
@@ -657,7 +686,7 @@ ALTER TABLE `buoihoc`
 -- AUTO_INCREMENT for table `cauhoi`
 --
 ALTER TABLE `cauhoi`
-  MODIFY `MaCauHoi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `MaCauHoi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT for table `chitietbaigiang`
@@ -687,7 +716,13 @@ ALTER TABLE `diemdanh`
 -- AUTO_INCREMENT for table `hocvien`
 --
 ALTER TABLE `hocvien`
-  MODIFY `MaHocVien` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `MaHocVien` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `ketquabaikiemtra`
+--
+ALTER TABLE `ketquabaikiemtra`
+  MODIFY `MaKetQua` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `khoahoc`
@@ -699,7 +734,7 @@ ALTER TABLE `khoahoc`
 -- AUTO_INCREMENT for table `lophoc`
 --
 ALTER TABLE `lophoc`
-  MODIFY `MaLopHoc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `MaLopHoc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `nguoidung`
@@ -734,12 +769,6 @@ ALTER TABLE `vaitro`
 --
 ALTER TABLE `baigiang`
   ADD CONSTRAINT `baigiang_ibfk_1` FOREIGN KEY (`MaKhoaHoc`) REFERENCES `khoahoc` (`MaKhoaHoc`);
-
---
--- Constraints for table `baikiemtra`
---
-ALTER TABLE `baikiemtra`
-  ADD CONSTRAINT `baikiemtra_ibfk_1` FOREIGN KEY (`MaKhoaHoc`) REFERENCES `khoahoc` (`MaKhoaHoc`);
 
 --
 -- Constraints for table `buoihoc`
@@ -780,6 +809,13 @@ ALTER TABLE `diemdanh`
 ALTER TABLE `hocvien`
   ADD CONSTRAINT `hocvien_ibfk_1` FOREIGN KEY (`MaLopHoc`) REFERENCES `lophoc` (`MaLopHoc`),
   ADD CONSTRAINT `hocvien_ibfk_2` FOREIGN KEY (`MaNguoiDung`) REFERENCES `nguoidung` (`MaNguoiDung`);
+
+--
+-- Constraints for table `ketquabaikiemtra`
+--
+ALTER TABLE `ketquabaikiemtra`
+  ADD CONSTRAINT `ketquabaikiemtra_ibfk_1` FOREIGN KEY (`MaBaiKiemTra`) REFERENCES `baikiemtra` (`MaBaiKiemTra`),
+  ADD CONSTRAINT `ketquabaikiemtra_ibfk_2` FOREIGN KEY (`MaHocVien`) REFERENCES `hocvien` (`MaHocVien`);
 
 --
 -- Constraints for table `lophoc`
