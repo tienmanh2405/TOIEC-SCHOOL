@@ -1,10 +1,10 @@
 import express from 'express';
-import { createBuoiHoc, getBuoiHocs, getBuoiHocById } from '../controllers/buoihoc.controller.js';
+import { createBuoiHoc, getBuoiHocs, getBuoiHocByMaLopHoc } from '../controllers/buoihoc.controller.js';
 
 const router = express.Router();
 
 router.post('/', createBuoiHoc);
 router.get('/', getBuoiHocs);
-router.get('/:MaBuoiHoc', getBuoiHocById);
+router.get('/:MaLopHoc', getBuoiHocByMaLopHoc);
 
 export default router;

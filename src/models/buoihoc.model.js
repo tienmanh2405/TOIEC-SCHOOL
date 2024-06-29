@@ -1,5 +1,5 @@
 import { DB_CONFID } from '../configs/db.config.js';
-import { create, getAll, findOne } from './data.model.js';
+import { create, getAll,find, findOne } from './data.model.js';
 
 const BuoiHoc = function(buoiHoc) {
     this.MaLopHoc = buoiHoc.MaLopHoc;
@@ -23,4 +23,7 @@ BuoiHoc.findOne = async (MaBuoiHoc) => {
     return await findOne(DB_CONFID.table.buoihoc, { MaBuoiHoc });
 };
 
+BuoiHoc.findAll = async (finds) => {
+    return await find(DB_CONFID.table.buoihoc, finds);
+};
 export default BuoiHoc;

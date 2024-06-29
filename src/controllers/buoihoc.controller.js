@@ -44,10 +44,10 @@ export const getBuoiHocs = async (req, res) => {
     }
 };
 
-export const getBuoiHocById = async (req, res) => {
+export const getBuoiHocByMaLopHoc = async (req, res) => {
     try {
-        const MaBuoiHoc = req.params.MaBuoiHoc;
-        const buoiHoc = await BuoiHoc.findOne(MaBuoiHoc);
+        const MaLopHoc = req.params.MaLopHoc;
+        const buoiHoc = await BuoiHoc.find(MaLopHoc);
         if (!buoiHoc) {
             res.status(404).json({
                 success: false,
