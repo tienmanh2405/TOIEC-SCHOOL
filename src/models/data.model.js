@@ -178,6 +178,49 @@ const updateRole = (table,nameRole, role,nameid, id) => {
         });
     });
 }
+const deleteMany = (table, conditions) => {
+    return new Promise((resolve, reject) => {
+        const conditionString = Object.keys(conditions).map(key => `${key} = ?`).join(' AND ');
+        const values = Object.values(conditions);
+        const query = `DELETE FROM ${table} WHERE ${conditionString}`;
+
+        db.query(query, values, (err, result) => {
+            if (err) {
+                reject(err);
+            } else if (result.affectedRows === 0) {
+                reject({ msg: 'No rows deleted', success: false });
+            } else {
+                resolve({ msg: 'Delete successfully!', success: true });
+            }
+        });
+    });
+};
+
+const updateMany = (table, updates, conditions) => {
+    return new Promise((resolve, reject) => {
+        const updateString = Object.keys(updates).map(key => `${key} = ?`).join(', ');
+        const conditionString = Object.keys(conditions).map(key => `${key} = ?`).join(' AND ');
+        const values = [...Object.values(updates), ...Object.values(conditions)];
+        const query = `UPDATE ${table} SET ${updateString} WHERE ${conditionString}`;
+
+        db.query(query, values, (err, result) => {
+            if (err) {
+                reject({ msg: err, success: false });
+            } else if (result.affectedRows === 0) {
+                reject({ msg: 'Update Not Found', success: false });
+            } else {
+                const selectQuery = `SELECT * FROM ${table} WHERE ${conditionString}`;
+                db.query(selectQuery, Object.values(conditions), (err, result) => {
+                    if (err) {
+                        reject({ msg: err, success: false });
+                    } else {
+                        resolve({ msg: 'Update successfully', result });
+                    }
+                });
+            }
+        });
+    });
+};
 
 export {
     getAll,
@@ -189,5 +232,7 @@ export {
     find,
     getInfoWithJoin,
     getByRole,
-    updateRole
+    updateRole,
+    deleteMany,
+    updateMany
 }

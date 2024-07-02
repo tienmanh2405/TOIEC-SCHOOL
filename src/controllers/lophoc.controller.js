@@ -1,4 +1,6 @@
 import { DB_CONFID } from '../configs/db.config.js';
+import HocVien from '../models/hocvien.model.js';
+import KetQuaBaiKiemTra from '../models/ketquabaiKiemTra.model.js';
 import LopHoc from '../models/lophoc.model.js';
 
 const getLopHocs = async (req, res) => {
@@ -96,13 +98,35 @@ const updateLopHoc = async (req, res) => {
 const deleteLopHoc = async (req, res) => {
     try {
         const roleAdmin = req.decoded.role;
-        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
+        if (!roleAdmin || roleAdmin !== DB_CONFID.resources.admin.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
-        deleteLH = await LopHoc.delete(req.params.id);
-        res.status(200).json(deleteLH);
+
+        const MaLopHoc = req.params.MaLopHoc;
+
+        // Tìm tất cả các học viên trong lớp
+        const hocViens = await HocVien.find({ MaLopHoc });
+
+        // Xóa tất cả các kết quả bài kiểm tra của các học viên này
+        const maHocViens = hocViens.map(hv => hv.MaHocVien);
+        await KetQuaBaiKiemTra.deleteMany({ MaHocVien: maHocViens });
+
+        // Xóa tất cả các học viên trong lớp
+        await HocVien.deleteMany({ MaLopHoc });
+
+        // Xóa lớp học
+        const result = await LopHoc.delete(MaLopHoc);
+
+        res.status(200).json({
+            success: true,
+            message: 'LopHoc deleted successfully',
+            data: result
+        });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
 };
 

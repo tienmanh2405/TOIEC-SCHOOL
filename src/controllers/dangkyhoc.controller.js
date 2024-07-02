@@ -1,8 +1,7 @@
 import DangKyHoc from '../models/dangkyhoc.model.js';
 import KhoaHoc from '../models/khoahoc.model.js';
 import stripe from '../configs/stripe.config.js';
-import Users from "../models/user.model.js";
-import CoSoDaoTao from "../models/cosodaotao.model.js";
+
 
 const getDangKyHocs = async (req, res) => {
     try {
@@ -52,7 +51,7 @@ const createDangKyHoc = async (req, res) => {
             MaKhoaHoc,
             MaCoSo,
             MaNguoiDung,
-            TrangThaiThanhToan: false // Thêm cột này khi tạo mới
+            TrangThaiThanhToan: false 
         };
 
         const createdDangKyHoc = await DangKyHoc.create(newDangKyHoc);

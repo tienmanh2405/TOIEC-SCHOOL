@@ -6,8 +6,8 @@ import {
     deleteCauHoi,
     updateCauHoi,
     scoreBaiKiemTra
-} from '../../controllers/cauhoi.controller.js';
-import { verify } from '../../middlewares/verifytoken.middleware.js';
+} from '../controllers/cauhoi.controller.js';
+import { verify } from '../middlewares/verifytoken.middleware.js';
 
 const router = express.Router();
 

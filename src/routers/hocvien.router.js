@@ -1,5 +1,6 @@
 import express from 'express';
-import { createHocVien, getHocViens, getHocVienById, updateHocVien } from '../controllers/hocvien.controller.js';
+import { createHocVien, getHocViens, getHocVienById, updateHocVien, deleteHocVien, updateHocVienByQuanLy } from '../controllers/hocvien.controller.js';
+import { verify } from '../middlewares/verifytoken.middleware.js';
 
 const router = express.Router();
 
@@ -7,5 +8,8 @@ router.post('/', createHocVien);
 router.get('/', getHocViens);
 router.get('/:MaHocVien', getHocVienById);
 router.put('/:MaHocVien', updateHocVien);
+router.put('/quanly/:MaHocVien', updateHocVienByQuanLy);
+router.put('/:MaHocVien',verify, updateHocVien); // chi giao vien va admin ms co quyen
+router.delete('/delete/:MaHocVien',verify, deleteHocVien); // chi admin ms co quyen
 
 export default router;

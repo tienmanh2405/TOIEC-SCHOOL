@@ -1,8 +1,10 @@
+import { DB_CONFID } from '../configs/db.config.js';
 import HocVien from '../models/hocvien.model.js';
+import KetQuaBaiKiemTra from '../models/ketquabaiKiemTra.model.js';
 
 export const createHocVien = async (req, res) => {
     try {
-        const { HoTen, Email, DiemDanh, DiemSo, NhanXet, MaLopHoc} = req.body;
+        const { HoTen, Email, DiemSo, NhanXet, MaLopHoc} = req.body;
         const result = await HocVien.create({ HoTen, Email, DiemSo, NhanXet, MaLopHoc});
         res.status(201).json({
             success: true,
@@ -70,11 +72,35 @@ export const getHocVienById = async (req, res) => {
 export const updateHocVien = async (req, res) => {
     try {
         const MaHocVien = req.params.MaHocVien;
+        const { HoTen, Email} = req.body;
+        let updateData = {};
+        if (HoTen) updateData.HoTen = HoTen;
+        if (Email) updateData.Email = Email;
+
+        const updatedHocVien = await HocVien.update(updateData, MaHocVien);
+        res.status(200).json({
+            success: true,
+            message: 'HocVien updated successfully',
+            data: updatedHocVien
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+export const updateHocVienByQuanLy = async (req, res) => {
+    try {
+        const roleAdmin = req.decoded.role;
+        if (!roleAdmin || roleAdmin == DB_CONFID.resourses.user.role) {
+            return res.status(401).json({ msg: 'Unauthorized!', success: false });
+        }
+        const MaHocVien = req.params.MaHocVien;
         const { HoTen, Email, DiemSo, NhanXet, MaLopHoc} = req.body;
         let updateData = {};
         if (HoTen) updateData.HoTen = HoTen;
         if (Email) updateData.Email = Email;
-        if (DiemDanh) updateData.DiemDanh = DiemDanh;
         if (DiemSo) updateData.DiemSo = DiemSo;
         if (NhanXet) updateData.NhanXet = NhanXet;
         if (MaLopHoc) updateData.MaLopHoc = MaLopHoc;
@@ -84,6 +110,33 @@ export const updateHocVien = async (req, res) => {
             success: true,
             message: 'HocVien updated successfully',
             data: updatedHocVien
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+export const deleteHocVien = async (req, res) => {
+    try {
+        const roleAdmin = req.decoded.role;
+        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role) {
+            return res.status(401).json({ msg: 'Unauthorized!', success: false });
+        }
+
+        const MaHocVien = req.params.MaHocVien;
+        // Xóa bản ghi trong KetQuaBaiKiemTra trước
+        const findDiemKiemTra = await KetQuaBaiKiemTra.findOne({MaHocVien});
+        if(findDiemKiemTra)
+            await KetQuaBaiKiemTra.delete(findDiemKiemTra.MaKetQua);
+
+        // Xóa học viên
+        const result = await HocVien.delete(MaHocVien);
+        res.status(200).json({
+            success: true,
+            message: 'HocVien deleted successfully',
+            data: result
         });
     } catch (error) {
         res.status(500).json({

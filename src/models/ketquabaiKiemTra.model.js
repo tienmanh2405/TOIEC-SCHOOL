@@ -1,5 +1,5 @@
 import { DB_CONFID } from '../configs/db.config.js';
-import { create, getAll } from './data.model.js';
+import { create, getAll, findOne, deleteById, find, deleteMany } from './data.model.js';
 
 const KetQuaBaiKiemTra = function(ketqua) {
     this.MaBaiKiemTra = ketqua.MaBaiKiemTra;
@@ -20,5 +20,18 @@ KetQuaBaiKiemTra.getAll = async (page, pageSize, sortOrder = 'ASC') => {
         throw error;
     }
 };
+KetQuaBaiKiemTra.findOne = async (finds) => {
+    return await findOne(DB_CONFID.table.ketquabaikiemtra, finds);
+};
+KetQuaBaiKiemTra.delete = async (id) => {
+    return await deleteById(DB_CONFID.table.ketquabaikiemtra, 'MaKetQua', id);
+};
 
+KetQuaBaiKiemTra.findAll = async (finds) => {
+    return await find(DB_CONFID.table.ketquabaikiemtra, finds);
+};
+
+KetQuaBaiKiemTra.deleteMany = async (conditions) => {
+    return await deleteMany(DB_CONFID.table.ketquabaikiemtra, conditions);
+};
 export default KetQuaBaiKiemTra;

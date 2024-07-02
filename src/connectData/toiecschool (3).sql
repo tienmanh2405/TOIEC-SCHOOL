@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Jun 29, 2024 at 02:55 PM
+-- Generation Time: Jul 02, 2024 at 04:14 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -34,6 +34,8 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `taoLopHocVaThemHocVien` ()   BEGIN
     DECLARE maLopHoc INT;
     DECLARE tongSoBuoiHoc INT;
     DECLARE thoiLuongHocTrenLop INT;
+    DECLARE ngayBatDau DATE;
+    DECLARE i INT;
 
     -- Cursor to retrieve the courses to check
     DECLARE cur CURSOR FOR 
@@ -78,6 +80,17 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `taoLopHocVaThemHocVien` ()   BEGIN
 
             -- Get the new class ID
             SET maLopHoc = LAST_INSERT_ID();
+
+            -- Get the class start date
+            SELECT NgayBatDau INTO ngayBatDau FROM LopHoc WHERE MaLopHoc = maLopHoc;
+
+            -- Create sessions for the class
+            SET i = 0;
+            WHILE i < tongSoBuoiHoc DO
+                INSERT INTO BuoiHoc (MaLopHoc, NgayBuoiHoc, ThoiLuong)
+                VALUES (maLopHoc, DATE_ADD(ngayBatDau, INTERVAL i * 2 DAY), thoiLuongHocTrenLop);
+                SET i = i + 1;
+            END WHILE;
         END IF;
 
         -- Add students to the class
@@ -153,6 +166,14 @@ CREATE TABLE `buoihoc` (
   `MaLopHoc` int(11) DEFAULT NULL,
   `NgayHoc` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `buoihoc`
+--
+
+INSERT INTO `buoihoc` (`MaBuoiHoc`, `MaLopHoc`, `NgayHoc`) VALUES
+(1, 13, '2024-06-01'),
+(2, 13, '2024-06-01');
 
 -- --------------------------------------------------------
 
@@ -327,7 +348,6 @@ CREATE TABLE `hocvien` (
 --
 
 INSERT INTO `hocvien` (`MaHocVien`, `MaNguoiDung`, `HoTen`, `Email`, `DiemSo`, `NhanXet`, `MaLopHoc`) VALUES
-(6, 31, 'Ngô Hồng Sơn', 'minhtuan1@example.com', NULL, NULL, 13),
 (7, 34, 'Hoàng Mai Anh', 'anhhoangmai@email.com', NULL, NULL, 13);
 
 -- --------------------------------------------------------
@@ -343,13 +363,6 @@ CREATE TABLE `ketquabaikiemtra` (
   `Diem` decimal(5,2) NOT NULL,
   `NgayThi` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `ketquabaikiemtra`
---
-
-INSERT INTO `ketquabaikiemtra` (`MaKetQua`, `MaBaiKiemTra`, `MaHocVien`, `Diem`, `NgayThi`) VALUES
-(1, 1, 6, 10.00, '2024-06-29 17:12:39');
 
 -- --------------------------------------------------------
 
@@ -680,7 +693,7 @@ ALTER TABLE `baikiemtra`
 -- AUTO_INCREMENT for table `buoihoc`
 --
 ALTER TABLE `buoihoc`
-  MODIFY `MaBuoiHoc` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `MaBuoiHoc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `cauhoi`
@@ -722,7 +735,7 @@ ALTER TABLE `hocvien`
 -- AUTO_INCREMENT for table `ketquabaikiemtra`
 --
 ALTER TABLE `ketquabaikiemtra`
-  MODIFY `MaKetQua` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `MaKetQua` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `khoahoc`

@@ -1,5 +1,5 @@
 import { DB_CONFID } from '../configs/db.config.js';
-import { create, getAll, findOne, update, findAll } from './data.model.js';
+import { create, getAll, findOne, find, updateById ,deleteById, deleteMany } from './data.model.js';
 
 const HocVien = function(hocVien) {
     this.MaNguoiDung = hocVien.MaNguoiDung;
@@ -29,11 +29,18 @@ HocVien.findOne = async (MaHocVien) => {
 };
 
 HocVien.update = async (MaHocVien, newData) => {
-    return await update(DB_CONFID.table.hocvien, { MaHocVien }, newData);
+    return await updateById(DB_CONFID.table.hocvien, { MaHocVien }, newData);
 };
 
 HocVien.findAll = async (finds) => {
-    return await findAll(DB_CONFID.table.hocvien, finds);
+    return await find(DB_CONFID.table.hocvien, finds);
+};
+HocVien.delete = async (id) => {
+    return await deleteById(DB_CONFID.table.hocvien, 'MaHocVien', id);
+};
+
+HocVien.deleteMany = async (conditions) => {
+    return await deleteMany(DB_CONFID.table.hocvien, conditions);
 };
 
 export default HocVien;
