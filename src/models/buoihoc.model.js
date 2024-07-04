@@ -26,4 +26,8 @@ BuoiHoc.findOne = async (MaBuoiHoc) => {
 BuoiHoc.findAll = async (finds) => {
     return await find(DB_CONFID.table.buoihoc, finds);
 };
+
+BuoiHoc.deleteMany = async (conditions) => {
+    return await deleteMany(DB_CONFID.table.buoihoc, conditions);
+};
 export default BuoiHoc;

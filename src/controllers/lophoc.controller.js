@@ -1,4 +1,5 @@
 import { DB_CONFID } from '../configs/db.config.js';
+import BuoiHoc from '../models/buoihoc.model.js';
 import HocVien from '../models/hocvien.model.js';
 import KetQuaBaiKiemTra from '../models/ketquabaiKiemTra.model.js';
 import LopHoc from '../models/lophoc.model.js';
@@ -113,7 +114,8 @@ const deleteLopHoc = async (req, res) => {
 
         // Xóa tất cả các học viên trong lớp
         await HocVien.deleteMany({ MaLopHoc });
-
+        // Xóa buoihoc cua lop nay
+        await BuoiHoc.deleteMany({ MaLopHoc });
         // Xóa lớp học
         const result = await LopHoc.delete(MaLopHoc);
 

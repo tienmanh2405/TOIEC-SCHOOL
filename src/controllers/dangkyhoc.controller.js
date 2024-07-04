@@ -1,6 +1,7 @@
 import DangKyHoc from '../models/dangkyhoc.model.js';
 import KhoaHoc from '../models/khoahoc.model.js';
 import stripe from '../configs/stripe.config.js';
+import { callProcedure } from '../models/data.model.js';
 
 
 const getDangKyHocs = async (req, res) => {
@@ -55,6 +56,7 @@ const createDangKyHoc = async (req, res) => {
         };
 
         const createdDangKyHoc = await DangKyHoc.create(newDangKyHoc);
+        await callProcedure('taoLopHocVaThemHocVien', []);
         res.status(201).json({ success: true, data: createdDangKyHoc });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -75,6 +77,8 @@ const updateDangKyHoc = async (req, res) => {
         if (TrangThaiThanhToan !== undefined) updateData.TrangThaiThanhToan = TrangThaiThanhToan;
 
         const updatedDangKyHoc = await DangKyHoc.update(updateData, req.params.id);
+        const call = await callProcedure('taoLopHocVaThemHocVien', []);
+        console.log(call);
         res.status(200).json({ success: true, data: updatedDangKyHoc });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

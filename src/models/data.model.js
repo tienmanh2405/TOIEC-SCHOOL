@@ -221,6 +221,22 @@ const updateMany = (table, updates, conditions) => {
         });
     });
 };
+const callProcedure = (procedureName, params) => {
+    return new Promise((resolve, reject) => {
+        // Tạo chuỗi tham số cho stored procedure
+        const placeholders = params.map(() => '?').join(', ');
+        const query = `CALL ${procedureName}(${placeholders})`;
+
+        db.query(query, params, (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({ msg: 'Call successfully'});
+            }
+        });
+    });
+};
+
 
 export {
     getAll,
@@ -234,5 +250,6 @@ export {
     getByRole,
     updateRole,
     deleteMany,
-    updateMany
+    updateMany,
+    callProcedure
 }

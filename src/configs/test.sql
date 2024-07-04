@@ -1,15 +1,16 @@
 DELIMITER //
 
-CREATE PROCEDURE taoLopHocVaThemHocVien()
+CREATE PROCEDURE taoLopHocVaThemHocVien(IN MaDangKy INT, IN MaKhoaHoc INT, IN MaCoSo INT)
 BEGIN
     DECLARE done INT DEFAULT 0;
-    DECLARE soLuongDangKy INT DEFAULT 0;
-    DECLARE siSoToiDa INT DEFAULT 0;
     DECLARE maKhoaHocCur INT;
     DECLARE maCoSoCur INT;
     DECLARE maLopHoc INT;
+    DECLARE siSoToiDa INT;
     DECLARE tongSoBuoiHoc INT;
     DECLARE thoiLuongHocTrenLop INT;
+    DECLARE ngayBatDau DATE;
+    DECLARE i INT;
 
     -- Cursor to retrieve the courses to check
     DECLARE cur CURSOR FOR 
@@ -49,11 +50,19 @@ BEGIN
 
         -- If no existing class or class is full, create a new class
         IF maLopHoc IS NULL THEN
+        	SET ngayBatDau = CURDATE();
             INSERT INTO LopHoc (MaKhoaHoc, MaCoSo, NgayBatDau, NgayDuKienKetThuc, TongSoBuoiHoc, ThoiLuongHocTrenLop)
-            VALUES (maKhoaHocCur, maCoSoCur, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 2 MONTH), tongSoBuoiHoc, thoiLuongHocTrenLop);
-
-            -- Get the new class ID
-            SET maLopHoc = LAST_INSERT_ID();
+            VALUES (maKhoaHocCur, maCoSoCur, ngayBatDau, DATE_ADD(ngayBatDau, INTERVAL ((tongSoBuoiHoc-1) * 2) DAY), tongSoBuoiHoc, thoiLuongHocTrenLop);
+			
+  			SET maLopHoc = LAST_INSERT_ID();
+            
+            -- Create sessions for the class
+            SET i = 0;
+            WHILE i < tongSoBuoiHoc DO
+                INSERT INTO BuoiHoc (MaLopHoc, NgayHoc)
+                VALUES (maLopHoc, DATE_ADD(ngayBatDau, INTERVAL (i * 2) DAY));  
+                SET i = i + 1;
+            END WHILE;
         END IF;
 
         -- Add students to the class
@@ -63,16 +72,14 @@ BEGIN
         WHERE dk.MaKhoaHoc = maKhoaHocCur
           AND dk.MaCoSo = maCoSoCur
           AND dk.TrangThaiThanhToan = TRUE;
-
-        -- Delete the entries from DangKyHoc after adding to HocVien
+		
         DELETE FROM DangKyHoc
         WHERE MaKhoaHoc = maKhoaHocCur
           AND MaCoSo = maCoSoCur
           AND TrangThaiThanhToan = TRUE;
-
     END LOOP;
 
     CLOSE cur;
-END
+END   
 
 DELIMITER ;

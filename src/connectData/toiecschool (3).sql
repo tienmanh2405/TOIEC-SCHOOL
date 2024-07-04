@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1:3307
--- Generation Time: Jul 02, 2024 at 04:14 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Máy chủ: 127.0.0.1:3307
+-- Thời gian đã tạo: Th7 04, 2024 lúc 04:18 PM
+-- Phiên bản máy phục vụ: 10.4.32-MariaDB
+-- Phiên bản PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,20 +18,19 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `toiecschool`
+-- Cơ sở dữ liệu: `toiecschool`
 --
 
 DELIMITER $$
 --
--- Procedures
+-- Thủ tục
 --
 CREATE DEFINER=`root`@`localhost` PROCEDURE `taoLopHocVaThemHocVien` ()   BEGIN
     DECLARE done INT DEFAULT 0;
-    DECLARE soLuongDangKy INT DEFAULT 0;
-    DECLARE siSoToiDa INT DEFAULT 0;
     DECLARE maKhoaHocCur INT;
     DECLARE maCoSoCur INT;
     DECLARE maLopHoc INT;
+    DECLARE siSoToiDa INT;
     DECLARE tongSoBuoiHoc INT;
     DECLARE thoiLuongHocTrenLop INT;
     DECLARE ngayBatDau DATE;
@@ -75,20 +74,17 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `taoLopHocVaThemHocVien` ()   BEGIN
 
         -- If no existing class or class is full, create a new class
         IF maLopHoc IS NULL THEN
+        	SET ngayBatDau = CURDATE();
             INSERT INTO LopHoc (MaKhoaHoc, MaCoSo, NgayBatDau, NgayDuKienKetThuc, TongSoBuoiHoc, ThoiLuongHocTrenLop)
-            VALUES (maKhoaHocCur, maCoSoCur, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 2 MONTH), tongSoBuoiHoc, thoiLuongHocTrenLop);
-
-            -- Get the new class ID
-            SET maLopHoc = LAST_INSERT_ID();
-
-            -- Get the class start date
-            SELECT NgayBatDau INTO ngayBatDau FROM LopHoc WHERE MaLopHoc = maLopHoc;
-
+            VALUES (maKhoaHocCur, maCoSoCur, ngayBatDau, DATE_ADD(ngayBatDau, INTERVAL ((tongSoBuoiHoc-1) * 2) DAY), tongSoBuoiHoc, thoiLuongHocTrenLop);
+			
+  			SET maLopHoc = LAST_INSERT_ID();
+            
             -- Create sessions for the class
             SET i = 0;
             WHILE i < tongSoBuoiHoc DO
-                INSERT INTO BuoiHoc (MaLopHoc, NgayBuoiHoc, ThoiLuong)
-                VALUES (maLopHoc, DATE_ADD(ngayBatDau, INTERVAL i * 2 DAY), thoiLuongHocTrenLop);
+                INSERT INTO BuoiHoc (MaLopHoc, NgayHoc)
+                VALUES (maLopHoc, DATE_ADD(ngayBatDau, INTERVAL (i * 2) DAY));  
                 SET i = i + 1;
             END WHILE;
         END IF;
@@ -100,13 +96,11 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `taoLopHocVaThemHocVien` ()   BEGIN
         WHERE dk.MaKhoaHoc = maKhoaHocCur
           AND dk.MaCoSo = maCoSoCur
           AND dk.TrangThaiThanhToan = TRUE;
-
-        -- Delete the entries from DangKyHoc after adding to HocVien
+		
         DELETE FROM DangKyHoc
         WHERE MaKhoaHoc = maKhoaHocCur
           AND MaCoSo = maCoSoCur
           AND TrangThaiThanhToan = TRUE;
-
     END LOOP;
 
     CLOSE cur;
@@ -117,7 +111,7 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Table structure for table `baigiang`
+-- Cấu trúc bảng cho bảng `baigiang`
 --
 
 CREATE TABLE `baigiang` (
@@ -127,7 +121,7 @@ CREATE TABLE `baigiang` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `baigiang`
+-- Đang đổ dữ liệu cho bảng `baigiang`
 --
 
 INSERT INTO `baigiang` (`MaBaiGiang`, `TenBaiGiang`, `MaKhoaHoc`) VALUES
@@ -137,7 +131,7 @@ INSERT INTO `baigiang` (`MaBaiGiang`, `TenBaiGiang`, `MaKhoaHoc`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `baikiemtra`
+-- Cấu trúc bảng cho bảng `baikiemtra`
 --
 
 CREATE TABLE `baikiemtra` (
@@ -146,7 +140,7 @@ CREATE TABLE `baikiemtra` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `baikiemtra`
+-- Đang đổ dữ liệu cho bảng `baikiemtra`
 --
 
 INSERT INTO `baikiemtra` (`MaBaiKiemTra`, `TenBaiKiemTra`) VALUES
@@ -158,7 +152,7 @@ INSERT INTO `baikiemtra` (`MaBaiKiemTra`, `TenBaiKiemTra`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `buoihoc`
+-- Cấu trúc bảng cho bảng `buoihoc`
 --
 
 CREATE TABLE `buoihoc` (
@@ -167,18 +161,10 @@ CREATE TABLE `buoihoc` (
   `NgayHoc` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `buoihoc`
---
-
-INSERT INTO `buoihoc` (`MaBuoiHoc`, `MaLopHoc`, `NgayHoc`) VALUES
-(1, 13, '2024-06-01'),
-(2, 13, '2024-06-01');
-
 -- --------------------------------------------------------
 
 --
--- Table structure for table `cauhoi`
+-- Cấu trúc bảng cho bảng `cauhoi`
 --
 
 CREATE TABLE `cauhoi` (
@@ -193,7 +179,7 @@ CREATE TABLE `cauhoi` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `cauhoi`
+-- Đang đổ dữ liệu cho bảng `cauhoi`
 --
 
 INSERT INTO `cauhoi` (`MaCauHoi`, `MaBaiKiemTra`, `NoiDung`, `LuaChon1`, `LuaChon2`, `LuaChon3`, `LuaChon4`, `DapAnDung`) VALUES
@@ -241,7 +227,7 @@ INSERT INTO `cauhoi` (`MaCauHoi`, `MaBaiKiemTra`, `NoiDung`, `LuaChon1`, `LuaCho
 -- --------------------------------------------------------
 
 --
--- Table structure for table `chitietbaigiang`
+-- Cấu trúc bảng cho bảng `chitietbaigiang`
 --
 
 CREATE TABLE `chitietbaigiang` (
@@ -253,7 +239,7 @@ CREATE TABLE `chitietbaigiang` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `chitietbaigiang`
+-- Đang đổ dữ liệu cho bảng `chitietbaigiang`
 --
 
 INSERT INTO `chitietbaigiang` (`MaChiTiet`, `MaBaiGiang`, `TenNoiDung`, `NoiDung`, `TaiLieu`) VALUES
@@ -268,7 +254,7 @@ INSERT INTO `chitietbaigiang` (`MaChiTiet`, `MaBaiGiang`, `TenNoiDung`, `NoiDung
 -- --------------------------------------------------------
 
 --
--- Table structure for table `cosodaotao`
+-- Cấu trúc bảng cho bảng `cosodaotao`
 --
 
 CREATE TABLE `cosodaotao` (
@@ -278,7 +264,7 @@ CREATE TABLE `cosodaotao` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `cosodaotao`
+-- Đang đổ dữ liệu cho bảng `cosodaotao`
 --
 
 INSERT INTO `cosodaotao` (`MaCoSo`, `TenCoSo`, `DiaChi`) VALUES
@@ -289,7 +275,7 @@ INSERT INTO `cosodaotao` (`MaCoSo`, `TenCoSo`, `DiaChi`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `dangkyhoc`
+-- Cấu trúc bảng cho bảng `dangkyhoc`
 --
 
 CREATE TABLE `dangkyhoc` (
@@ -304,20 +290,10 @@ CREATE TABLE `dangkyhoc` (
   `clientSecret` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Triggers `dangkyhoc`
---
-DELIMITER $$
-CREATE TRIGGER `trg_after_insert_dangkyhoc` AFTER INSERT ON `dangkyhoc` FOR EACH ROW BEGIN
-    CALL taoLopHocVaThemHocVien();
-END
-$$
-DELIMITER ;
-
 -- --------------------------------------------------------
 
 --
--- Table structure for table `diemdanh`
+-- Cấu trúc bảng cho bảng `diemdanh`
 --
 
 CREATE TABLE `diemdanh` (
@@ -330,7 +306,7 @@ CREATE TABLE `diemdanh` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `hocvien`
+-- Cấu trúc bảng cho bảng `hocvien`
 --
 
 CREATE TABLE `hocvien` (
@@ -343,17 +319,10 @@ CREATE TABLE `hocvien` (
   `MaLopHoc` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `hocvien`
---
-
-INSERT INTO `hocvien` (`MaHocVien`, `MaNguoiDung`, `HoTen`, `Email`, `DiemSo`, `NhanXet`, `MaLopHoc`) VALUES
-(7, 34, 'Hoàng Mai Anh', 'anhhoangmai@email.com', NULL, NULL, 13);
-
 -- --------------------------------------------------------
 
 --
--- Table structure for table `ketquabaikiemtra`
+-- Cấu trúc bảng cho bảng `ketquabaikiemtra`
 --
 
 CREATE TABLE `ketquabaikiemtra` (
@@ -367,7 +336,7 @@ CREATE TABLE `ketquabaikiemtra` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `khoahoc`
+-- Cấu trúc bảng cho bảng `khoahoc`
 --
 
 CREATE TABLE `khoahoc` (
@@ -382,12 +351,12 @@ CREATE TABLE `khoahoc` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `khoahoc`
+-- Đang đổ dữ liệu cho bảng `khoahoc`
 --
 
 INSERT INTO `khoahoc` (`MaKhoaHoc`, `TenKhoaHoc`, `MoTa`, `TongSoBuoiHoc`, `ThoiLuongTrenLop`, `SiSoToiDa`, `GiaThanh`, `HinhAnh`) VALUES
 (2, 'TOEIC Basic', 'Khóa học cơ bản, phù hợp cho người mới bắt đầu làm quen với TOEIC.', 10, '3 giờ/buổi', 2, 129.00, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718978475/TOIECSCHOOL/toiec1.jpg'),
-(4, 'TOEIC Intermediate', 'Khóa học trung cấp, dành cho những ai đã có kiến thức cơ bản về TOEIC.', 15, '3 giờ/buổi', 20, 193.50, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718978527/TOIECSCHOOL/toiec4.jpg'),
+(4, 'TOEIC Intermediate', 'Khóa học trung cấp, dành cho những ai đã có kiến thức cơ bản về TOEIC.', 15, '3 giờ/buổi', 2, 193.50, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718978527/TOIECSCHOOL/toiec4.jpg'),
 (6, 'TOEIC Advanced', 'Khóa học nâng cao, giúp học viên đạt điểm số cao trong kỳ thi TOEIC.', 20, '3 giờ/buổi', 20, 260.00, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718978579/TOIECSCHOOL/toiec5.jpg'),
 (12, 'TOEIC Speaking & Writing', 'Khóa học chuyên sâu vào kỹ năng nói và viết trong kỳ thi TOEIC.', 12, '2 giờ/buổi', 20, 180.00, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718979125/TOIECSCHOOL/toiec3.jpg'),
 (13, 'TOEIC Listening & Reading Part 1', 'Khóa học chuyên sâu vào kỹ năng nghe và đọc trong kỳ thi TOEIC.', 16, '2 giờ/buổi', 20, 250.00, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718979226/TOIECSCHOOL/toiec6.jpg'),
@@ -396,7 +365,7 @@ INSERT INTO `khoahoc` (`MaKhoaHoc`, `TenKhoaHoc`, `MoTa`, `TongSoBuoiHoc`, `Thoi
 -- --------------------------------------------------------
 
 --
--- Table structure for table `lophoc`
+-- Cấu trúc bảng cho bảng `lophoc`
 --
 
 CREATE TABLE `lophoc` (
@@ -411,17 +380,10 @@ CREATE TABLE `lophoc` (
   `MaGiangVien` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `lophoc`
---
-
-INSERT INTO `lophoc` (`MaLopHoc`, `NgayBatDau`, `NgayDuKienKetThuc`, `TongSoBuoiHoc`, `ThoiLuongHocTrenLop`, `LichHocTrongTuan`, `MaCoSo`, `MaKhoaHoc`, `MaGiangVien`) VALUES
-(13, '2024-06-23', '2024-08-23', 20, 2, 'T2-T6', 1, 2, NULL);
-
 -- --------------------------------------------------------
 
 --
--- Table structure for table `nguoidung`
+-- Cấu trúc bảng cho bảng `nguoidung`
 --
 
 CREATE TABLE `nguoidung` (
@@ -435,7 +397,7 @@ CREATE TABLE `nguoidung` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `nguoidung`
+-- Đang đổ dữ liệu cho bảng `nguoidung`
 --
 
 INSERT INTO `nguoidung` (`MaNguoiDung`, `HoTen`, `Email`, `SoDienThoai`, `TenTaiKhoan`, `MatKhau`, `NgaySinh`) VALUES
@@ -453,7 +415,7 @@ INSERT INTO `nguoidung` (`MaNguoiDung`, `HoTen`, `Email`, `SoDienThoai`, `TenTai
 -- --------------------------------------------------------
 
 --
--- Table structure for table `phanquyen`
+-- Cấu trúc bảng cho bảng `phanquyen`
 --
 
 CREATE TABLE `phanquyen` (
@@ -462,7 +424,7 @@ CREATE TABLE `phanquyen` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `phanquyen`
+-- Đang đổ dữ liệu cho bảng `phanquyen`
 --
 
 INSERT INTO `phanquyen` (`MaQuanLy`, `MaVaiTro`) VALUES
@@ -475,7 +437,7 @@ INSERT INTO `phanquyen` (`MaQuanLy`, `MaVaiTro`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `quanly`
+-- Cấu trúc bảng cho bảng `quanly`
 --
 
 CREATE TABLE `quanly` (
@@ -489,7 +451,7 @@ CREATE TABLE `quanly` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `quanly`
+-- Đang đổ dữ liệu cho bảng `quanly`
 --
 
 INSERT INTO `quanly` (`MaQuanLy`, `HoTen`, `Email`, `SoDienThoai`, `TenTaiKhoan`, `MatKhau`, `NgaySinh`) VALUES
@@ -500,7 +462,7 @@ INSERT INTO `quanly` (`MaQuanLy`, `HoTen`, `Email`, `SoDienThoai`, `TenTaiKhoan`
 (12, 'Nguyễn Đình Thống', 'dinhthong0001@email.com', '0385743422', 'dinhthong2', '$2b$10$InWqzv73eM9XV8IXhKSJ5uZJBsa5qft4IQDr7oPDohktIZKMMdwpy', NULL);
 
 --
--- Triggers `quanly`
+-- Bẫy `quanly`
 --
 DELIMITER $$
 CREATE TRIGGER `AFTER_CREATE_QUANLY` AFTER INSERT ON `quanly` FOR EACH ROW BEGIN
@@ -518,7 +480,7 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Table structure for table `thanhtoan`
+-- Cấu trúc bảng cho bảng `thanhtoan`
 --
 
 CREATE TABLE `thanhtoan` (
@@ -532,7 +494,7 @@ CREATE TABLE `thanhtoan` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `vaitro`
+-- Cấu trúc bảng cho bảng `vaitro`
 --
 
 CREATE TABLE `vaitro` (
@@ -541,7 +503,7 @@ CREATE TABLE `vaitro` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `vaitro`
+-- Đang đổ dữ liệu cho bảng `vaitro`
 --
 
 INSERT INTO `vaitro` (`MaVaiTro`, `TenVaiTro`) VALUES
@@ -549,51 +511,51 @@ INSERT INTO `vaitro` (`MaVaiTro`, `TenVaiTro`) VALUES
 (2, 'GiangVien');
 
 --
--- Indexes for dumped tables
+-- Chỉ mục cho các bảng đã đổ
 --
 
 --
--- Indexes for table `baigiang`
+-- Chỉ mục cho bảng `baigiang`
 --
 ALTER TABLE `baigiang`
   ADD PRIMARY KEY (`MaBaiGiang`),
   ADD KEY `MaKhoaHoc` (`MaKhoaHoc`);
 
 --
--- Indexes for table `baikiemtra`
+-- Chỉ mục cho bảng `baikiemtra`
 --
 ALTER TABLE `baikiemtra`
   ADD PRIMARY KEY (`MaBaiKiemTra`);
 
 --
--- Indexes for table `buoihoc`
+-- Chỉ mục cho bảng `buoihoc`
 --
 ALTER TABLE `buoihoc`
   ADD PRIMARY KEY (`MaBuoiHoc`),
   ADD KEY `MaLopHoc` (`MaLopHoc`);
 
 --
--- Indexes for table `cauhoi`
+-- Chỉ mục cho bảng `cauhoi`
 --
 ALTER TABLE `cauhoi`
   ADD PRIMARY KEY (`MaCauHoi`),
   ADD KEY `MaBaiKiemTra` (`MaBaiKiemTra`);
 
 --
--- Indexes for table `chitietbaigiang`
+-- Chỉ mục cho bảng `chitietbaigiang`
 --
 ALTER TABLE `chitietbaigiang`
   ADD PRIMARY KEY (`MaChiTiet`),
   ADD KEY `MaBaiGiang` (`MaBaiGiang`);
 
 --
--- Indexes for table `cosodaotao`
+-- Chỉ mục cho bảng `cosodaotao`
 --
 ALTER TABLE `cosodaotao`
   ADD PRIMARY KEY (`MaCoSo`);
 
 --
--- Indexes for table `dangkyhoc`
+-- Chỉ mục cho bảng `dangkyhoc`
 --
 ALTER TABLE `dangkyhoc`
   ADD PRIMARY KEY (`MaDangKy`),
@@ -602,7 +564,7 @@ ALTER TABLE `dangkyhoc`
   ADD KEY `fk_MaNguoiDung` (`MaNguoiDung`);
 
 --
--- Indexes for table `diemdanh`
+-- Chỉ mục cho bảng `diemdanh`
 --
 ALTER TABLE `diemdanh`
   ADD PRIMARY KEY (`MaDiemDanh`),
@@ -610,7 +572,7 @@ ALTER TABLE `diemdanh`
   ADD KEY `MaBuoiHoc` (`MaBuoiHoc`);
 
 --
--- Indexes for table `hocvien`
+-- Chỉ mục cho bảng `hocvien`
 --
 ALTER TABLE `hocvien`
   ADD PRIMARY KEY (`MaHocVien`),
@@ -618,7 +580,7 @@ ALTER TABLE `hocvien`
   ADD KEY `MaNguoiDung` (`MaNguoiDung`);
 
 --
--- Indexes for table `ketquabaikiemtra`
+-- Chỉ mục cho bảng `ketquabaikiemtra`
 --
 ALTER TABLE `ketquabaikiemtra`
   ADD PRIMARY KEY (`MaKetQua`),
@@ -626,13 +588,13 @@ ALTER TABLE `ketquabaikiemtra`
   ADD KEY `MaHocVien` (`MaHocVien`);
 
 --
--- Indexes for table `khoahoc`
+-- Chỉ mục cho bảng `khoahoc`
 --
 ALTER TABLE `khoahoc`
   ADD PRIMARY KEY (`MaKhoaHoc`);
 
 --
--- Indexes for table `lophoc`
+-- Chỉ mục cho bảng `lophoc`
 --
 ALTER TABLE `lophoc`
   ADD PRIMARY KEY (`MaLopHoc`),
@@ -641,168 +603,168 @@ ALTER TABLE `lophoc`
   ADD KEY `Fk_lophoc_giangvien` (`MaGiangVien`);
 
 --
--- Indexes for table `nguoidung`
+-- Chỉ mục cho bảng `nguoidung`
 --
 ALTER TABLE `nguoidung`
   ADD PRIMARY KEY (`MaNguoiDung`);
 
 --
--- Indexes for table `phanquyen`
+-- Chỉ mục cho bảng `phanquyen`
 --
 ALTER TABLE `phanquyen`
   ADD PRIMARY KEY (`MaQuanLy`,`MaVaiTro`),
   ADD KEY `MaVaiTro` (`MaVaiTro`);
 
 --
--- Indexes for table `quanly`
+-- Chỉ mục cho bảng `quanly`
 --
 ALTER TABLE `quanly`
   ADD PRIMARY KEY (`MaQuanLy`);
 
 --
--- Indexes for table `thanhtoan`
+-- Chỉ mục cho bảng `thanhtoan`
 --
 ALTER TABLE `thanhtoan`
   ADD PRIMARY KEY (`MaThanhToan`),
   ADD KEY `MaDangKy` (`MaDangKy`);
 
 --
--- Indexes for table `vaitro`
+-- Chỉ mục cho bảng `vaitro`
 --
 ALTER TABLE `vaitro`
   ADD PRIMARY KEY (`MaVaiTro`),
   ADD UNIQUE KEY `TenVaiTro` (`TenVaiTro`);
 
 --
--- AUTO_INCREMENT for dumped tables
+-- AUTO_INCREMENT cho các bảng đã đổ
 --
 
 --
--- AUTO_INCREMENT for table `baigiang`
+-- AUTO_INCREMENT cho bảng `baigiang`
 --
 ALTER TABLE `baigiang`
   MODIFY `MaBaiGiang` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT for table `baikiemtra`
+-- AUTO_INCREMENT cho bảng `baikiemtra`
 --
 ALTER TABLE `baikiemtra`
   MODIFY `MaBaiKiemTra` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `buoihoc`
+-- AUTO_INCREMENT cho bảng `buoihoc`
 --
 ALTER TABLE `buoihoc`
-  MODIFY `MaBuoiHoc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `MaBuoiHoc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=173;
 
 --
--- AUTO_INCREMENT for table `cauhoi`
+-- AUTO_INCREMENT cho bảng `cauhoi`
 --
 ALTER TABLE `cauhoi`
   MODIFY `MaCauHoi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
--- AUTO_INCREMENT for table `chitietbaigiang`
+-- AUTO_INCREMENT cho bảng `chitietbaigiang`
 --
 ALTER TABLE `chitietbaigiang`
   MODIFY `MaChiTiet` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
--- AUTO_INCREMENT for table `cosodaotao`
+-- AUTO_INCREMENT cho bảng `cosodaotao`
 --
 ALTER TABLE `cosodaotao`
   MODIFY `MaCoSo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT for table `dangkyhoc`
+-- AUTO_INCREMENT cho bảng `dangkyhoc`
 --
 ALTER TABLE `dangkyhoc`
-  MODIFY `MaDangKy` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `MaDangKy` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
--- AUTO_INCREMENT for table `diemdanh`
+-- AUTO_INCREMENT cho bảng `diemdanh`
 --
 ALTER TABLE `diemdanh`
   MODIFY `MaDiemDanh` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `hocvien`
+-- AUTO_INCREMENT cho bảng `hocvien`
 --
 ALTER TABLE `hocvien`
-  MODIFY `MaHocVien` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `MaHocVien` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
--- AUTO_INCREMENT for table `ketquabaikiemtra`
+-- AUTO_INCREMENT cho bảng `ketquabaikiemtra`
 --
 ALTER TABLE `ketquabaikiemtra`
   MODIFY `MaKetQua` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
--- AUTO_INCREMENT for table `khoahoc`
+-- AUTO_INCREMENT cho bảng `khoahoc`
 --
 ALTER TABLE `khoahoc`
   MODIFY `MaKhoaHoc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
--- AUTO_INCREMENT for table `lophoc`
+-- AUTO_INCREMENT cho bảng `lophoc`
 --
 ALTER TABLE `lophoc`
-  MODIFY `MaLopHoc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `MaLopHoc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
--- AUTO_INCREMENT for table `nguoidung`
+-- AUTO_INCREMENT cho bảng `nguoidung`
 --
 ALTER TABLE `nguoidung`
   MODIFY `MaNguoiDung` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
--- AUTO_INCREMENT for table `quanly`
+-- AUTO_INCREMENT cho bảng `quanly`
 --
 ALTER TABLE `quanly`
   MODIFY `MaQuanLy` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
--- AUTO_INCREMENT for table `thanhtoan`
+-- AUTO_INCREMENT cho bảng `thanhtoan`
 --
 ALTER TABLE `thanhtoan`
   MODIFY `MaThanhToan` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `vaitro`
+-- AUTO_INCREMENT cho bảng `vaitro`
 --
 ALTER TABLE `vaitro`
   MODIFY `MaVaiTro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- Constraints for dumped tables
+-- Các ràng buộc cho các bảng đã đổ
 --
 
 --
--- Constraints for table `baigiang`
+-- Các ràng buộc cho bảng `baigiang`
 --
 ALTER TABLE `baigiang`
   ADD CONSTRAINT `baigiang_ibfk_1` FOREIGN KEY (`MaKhoaHoc`) REFERENCES `khoahoc` (`MaKhoaHoc`);
 
 --
--- Constraints for table `buoihoc`
+-- Các ràng buộc cho bảng `buoihoc`
 --
 ALTER TABLE `buoihoc`
   ADD CONSTRAINT `buoihoc_ibfk_1` FOREIGN KEY (`MaLopHoc`) REFERENCES `lophoc` (`MaLopHoc`);
 
 --
--- Constraints for table `cauhoi`
+-- Các ràng buộc cho bảng `cauhoi`
 --
 ALTER TABLE `cauhoi`
   ADD CONSTRAINT `cauhoi_ibfk_1` FOREIGN KEY (`MaBaiKiemTra`) REFERENCES `baikiemtra` (`MaBaiKiemTra`);
 
 --
--- Constraints for table `chitietbaigiang`
+-- Các ràng buộc cho bảng `chitietbaigiang`
 --
 ALTER TABLE `chitietbaigiang`
   ADD CONSTRAINT `chitietbaigiang_ibfk_1` FOREIGN KEY (`MaBaiGiang`) REFERENCES `baigiang` (`MaBaiGiang`);
 
 --
--- Constraints for table `dangkyhoc`
+-- Các ràng buộc cho bảng `dangkyhoc`
 --
 ALTER TABLE `dangkyhoc`
   ADD CONSTRAINT `dangkyhoc_ibfk_1` FOREIGN KEY (`MaKhoaHoc`) REFERENCES `khoahoc` (`MaKhoaHoc`),
@@ -810,28 +772,28 @@ ALTER TABLE `dangkyhoc`
   ADD CONSTRAINT `fk_MaNguoiDung` FOREIGN KEY (`MaNguoiDung`) REFERENCES `nguoidung` (`MaNguoiDung`);
 
 --
--- Constraints for table `diemdanh`
+-- Các ràng buộc cho bảng `diemdanh`
 --
 ALTER TABLE `diemdanh`
   ADD CONSTRAINT `diemdanh_ibfk_1` FOREIGN KEY (`MaHocVien`) REFERENCES `hocvien` (`MaHocVien`),
   ADD CONSTRAINT `diemdanh_ibfk_2` FOREIGN KEY (`MaBuoiHoc`) REFERENCES `buoihoc` (`MaBuoiHoc`);
 
 --
--- Constraints for table `hocvien`
+-- Các ràng buộc cho bảng `hocvien`
 --
 ALTER TABLE `hocvien`
   ADD CONSTRAINT `hocvien_ibfk_1` FOREIGN KEY (`MaLopHoc`) REFERENCES `lophoc` (`MaLopHoc`),
   ADD CONSTRAINT `hocvien_ibfk_2` FOREIGN KEY (`MaNguoiDung`) REFERENCES `nguoidung` (`MaNguoiDung`);
 
 --
--- Constraints for table `ketquabaikiemtra`
+-- Các ràng buộc cho bảng `ketquabaikiemtra`
 --
 ALTER TABLE `ketquabaikiemtra`
   ADD CONSTRAINT `ketquabaikiemtra_ibfk_1` FOREIGN KEY (`MaBaiKiemTra`) REFERENCES `baikiemtra` (`MaBaiKiemTra`),
   ADD CONSTRAINT `ketquabaikiemtra_ibfk_2` FOREIGN KEY (`MaHocVien`) REFERENCES `hocvien` (`MaHocVien`);
 
 --
--- Constraints for table `lophoc`
+-- Các ràng buộc cho bảng `lophoc`
 --
 ALTER TABLE `lophoc`
   ADD CONSTRAINT `Fk_lophoc_giangvien` FOREIGN KEY (`MaGiangVien`) REFERENCES `quanly` (`MaQuanLy`),
@@ -839,14 +801,14 @@ ALTER TABLE `lophoc`
   ADD CONSTRAINT `lophoc_ibfk_3` FOREIGN KEY (`MaKhoaHoc`) REFERENCES `khoahoc` (`MaKhoaHoc`);
 
 --
--- Constraints for table `phanquyen`
+-- Các ràng buộc cho bảng `phanquyen`
 --
 ALTER TABLE `phanquyen`
   ADD CONSTRAINT `phanquyen_ibfk_1` FOREIGN KEY (`MaQuanLy`) REFERENCES `quanly` (`MaQuanLy`) ON DELETE CASCADE,
   ADD CONSTRAINT `phanquyen_ibfk_2` FOREIGN KEY (`MaVaiTro`) REFERENCES `vaitro` (`MaVaiTro`) ON DELETE CASCADE;
 
 --
--- Constraints for table `thanhtoan`
+-- Các ràng buộc cho bảng `thanhtoan`
 --
 ALTER TABLE `thanhtoan`
   ADD CONSTRAINT `thanhtoan_ibfk_1` FOREIGN KEY (`MaDangKy`) REFERENCES `dangkyhoc` (`MaDangKy`);
