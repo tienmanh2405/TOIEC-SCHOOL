@@ -16,6 +16,7 @@ import cauhoiRouter from './src/routers/cauhoi.router.js';
 import buoiHocRouter from './src/routers/buoihoc.router.js';
 import diemDanhRouter from './src/routers/diemdanh.router.js';
 import hocVienRouter from './src/routers/hocvien.router.js';
+import coSoDaoTaoRouter from './src/routers/cosodaotao.router.js';
 import cors from 'cors';
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/cauhoi', cauhoiRouter);
 app.use('/buoihoc', buoiHocRouter);
 app.use('/diemdanh', diemDanhRouter);
 app.use('/hocvien', hocVienRouter);
+app.use('/cosodaotao', coSoDaoTaoRouter);
 async function main() {
     try {
 
