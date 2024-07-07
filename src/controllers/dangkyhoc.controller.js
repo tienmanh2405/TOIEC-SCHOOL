@@ -26,9 +26,16 @@ const getDangKyHocs = async (req, res) => {
     }
 };
 
-const getDangKyHocById = async (req, res) => {
+const getDangKyHocByMaNguoiDung = async (req, res) => {
     try {
-        const dangkyhoc = await DangKyHoc.getById(req.params.id);
+        const MaNguoiDung  = req.params.MaNguoiDung;
+        const dangkyhoc = await DangKyHoc.findAll(MaNguoiDung);
+        if (dangkyhoc.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'DangKyHoc not found'
+            });
+        }
         res.status(200).json({ success: true, data: dangkyhoc });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -130,4 +137,4 @@ const createPaymentIntent = async (req, res) => {
     }
 };
 
-export { getDangKyHocs, getDangKyHocById, createDangKyHoc, updateDangKyHoc, deleteDangKyHoc, createPaymentIntent };
+export { getDangKyHocs, getDangKyHocByMaNguoiDung, createDangKyHoc, updateDangKyHoc, deleteDangKyHoc, createPaymentIntent };

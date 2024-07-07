@@ -1,5 +1,5 @@
 import { DB_CONFID } from '../configs/db.config.js';
-import { create, deleteById, findOne, getAll, getById, updateById } from './data.model.js';
+import { create, deleteById, findOne, getAll, getById, updateById, find } from './data.model.js';
 
 const DangKyHoc = function(dangkyhoc) {
     this.MaDangKy = dangkyhoc.MaDangKy;
@@ -31,4 +31,7 @@ DangKyHoc.findOne = async (finds) => {
     return await findOne(DB_CONFID.table.dangkyhoc, finds);
 };
 
+DangKyHoc.findAll = async (finds) => {
+    return await find(DB_CONFID.table.dangkyhoc, finds);
+};
 export default DangKyHoc;
