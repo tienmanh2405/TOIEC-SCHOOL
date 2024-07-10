@@ -1,5 +1,5 @@
 import { DB_CONFID } from '../configs/db.config.js';
-import { create, deleteById, findOne, getAll, getById, updateById } from './data.model.js';
+import { create, deleteById, findOne, getAll, getById, updateById, find } from './data.model.js';
 
 const LopHoc = function(lophoc) {
     this.MaLopHoc = lophoc.MaLopHoc;
@@ -32,5 +32,7 @@ LopHoc.update = async (newLopHoc, id) => {
 LopHoc.findOne = async (finds) => {
     return await findOne(DB_CONFID.table.lophoc, finds);
 };
-
+LopHoc.findAll = async (finds) => {
+    return await find(DB_CONFID.table.lophoc, finds);
+};
 export default LopHoc;

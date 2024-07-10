@@ -1,11 +1,12 @@
 import express from 'express';
-import { createHocVien, getHocViens, getHocVienById, updateHocVien, deleteHocVien, updateHocVienByQuanLy } from '../controllers/hocvien.controller.js';
+import { createHocVien, getHocViens,getHocVienById, getHocVienByMaLopHoc, updateHocVien, deleteHocVien, updateHocVienByQuanLy } from '../controllers/hocvien.controller.js';
 import { verify } from '../middlewares/verifytoken.middleware.js';
 
 const router = express.Router();
 
 router.post('/', createHocVien);
 router.get('/', getHocViens);
+router.get('/lophoc/:MaLopHoc',verify, getHocVienByMaLopHoc);
 router.get('/:MaHocVien', getHocVienById);
 router.put('/:MaHocVien', updateHocVien);
 router.put('/quanly/:MaHocVien', updateHocVienByQuanLy);

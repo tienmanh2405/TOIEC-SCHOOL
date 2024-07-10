@@ -1,6 +1,3 @@
-DELIMITER //
-
-CREATE PROCEDURE taoLopHocVaThemHocVien(IN MaDangKy INT, IN MaKhoaHoc INT, IN MaCoSo INT)
 BEGIN
     DECLARE done INT DEFAULT 0;
     DECLARE maKhoaHocCur INT;
@@ -37,24 +34,19 @@ BEGIN
         -- Check if there is an existing class with available seats
         SELECT lh.MaLopHoc INTO maLopHoc
         FROM LopHoc lh
-        LEFT JOIN (
-            SELECT MaLopHoc, COUNT(*) AS SoLuongHocVien
-            FROM HocVien
-            GROUP BY MaLopHoc
-        ) hv ON lh.MaLopHoc = hv.MaLopHoc
         WHERE lh.MaKhoaHoc = maKhoaHocCur 
           AND lh.MaCoSo = maCoSoCur
-          AND (siSoToiDa - IFNULL(hv.SoLuongHocVien, 0)) > 0
-        ORDER BY (siSoToiDa - IFNULL(hv.SoLuongHocVien, 0)) DESC
+          AND (siSoToiDa - lh.SoLuongHocVienHienTai) > 0
+        ORDER BY (siSoToiDa - lh.SoLuongHocVienHienTai) DESC
         LIMIT 1;
 
         -- If no existing class or class is full, create a new class
         IF maLopHoc IS NULL THEN
-        	SET ngayBatDau = CURDATE();
-            INSERT INTO LopHoc (MaKhoaHoc, MaCoSo, NgayBatDau, NgayDuKienKetThuc, TongSoBuoiHoc, ThoiLuongHocTrenLop)
-            VALUES (maKhoaHocCur, maCoSoCur, ngayBatDau, DATE_ADD(ngayBatDau, INTERVAL ((tongSoBuoiHoc-1) * 2) DAY), tongSoBuoiHoc, thoiLuongHocTrenLop);
-			
-  			SET maLopHoc = LAST_INSERT_ID();
+            SET ngayBatDau = CURDATE();
+            INSERT INTO LopHoc (MaKhoaHoc, MaCoSo, NgayBatDau, NgayDuKienKetThuc, TongSoBuoiHoc, ThoiLuongHocTrenLop, SoLuongHocVienHienTai)
+            VALUES (maKhoaHocCur, maCoSoCur, ngayBatDau, DATE_ADD(ngayBatDau, INTERVAL ((tongSoBuoiHoc-1) * 2) DAY), tongSoBuoiHoc, thoiLuongHocTrenLop, 0);
+
+            SET maLopHoc = LAST_INSERT_ID();
             
             -- Create sessions for the class
             SET i = 0;
@@ -72,7 +64,21 @@ BEGIN
         WHERE dk.MaKhoaHoc = maKhoaHocCur
           AND dk.MaCoSo = maCoSoCur
           AND dk.TrangThaiThanhToan = TRUE;
-		
+          -- Add attendance records for the new students
+        INSERT INTO DiemDanh (MaHocVien, MaBuoiHoc, TrangThai)
+        SELECT hv.MaNguoiDung, bh.MaBuoiHoc, 'Chưa điểm danh'
+        FROM HocVien hv
+        JOIN BuoiHoc bh ON bh.MaLopHoc = maLopHoc;
+        -- Update the current number of students in the class
+        UPDATE LopHoc
+        SET SoLuongHocVienHienTai = (
+            SELECT COUNT(*)
+            FROM HocVien
+            WHERE MaLopHoc = maLopHoc
+        )
+        WHERE MaLopHoc = maLopHoc;
+
+        -- Delete the registration records
         DELETE FROM DangKyHoc
         WHERE MaKhoaHoc = maKhoaHocCur
           AND MaCoSo = maCoSoCur
@@ -80,6 +86,4 @@ BEGIN
     END LOOP;
 
     CLOSE cur;
-END   
-
-DELIMITER ;
+END

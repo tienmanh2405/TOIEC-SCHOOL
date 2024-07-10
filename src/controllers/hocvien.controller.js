@@ -46,6 +46,32 @@ export const getHocViens = async (req, res) => {
     }
 };
 
+export const getHocVienByMaLopHoc = async (req, res) => {
+    try {
+        const role = req.decoded.role;
+        if (!role || role!== DB_CONFID.resourses.admin.role && role!== DB_CONFID.resourses.giangvien.role) {
+            return res.status(401).json({ msg: 'Unauthorized!', success: false });
+        }
+        const MaLopHoc = req.params.MaLopHoc;
+        const hocVien = await HocVien.findAll({MaLopHoc});
+        if (!hocVien) {
+            res.status(404).json({
+                success: false,
+                message: 'HocVien not found'
+            });
+            return;
+        }
+        res.status(200).json({
+            success: true,
+            data: hocVien
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 export const getHocVienById = async (req, res) => {
     try {
         const MaHocVien = req.params.MaHocVien;

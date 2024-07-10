@@ -1,5 +1,5 @@
 import { DB_CONFID } from '../configs/db.config.js';
-import { create, getAll, find } from './data.model.js';
+import { create, getAll, find, updateMany } from './data.model.js';
 
 const DiemDanh = function(diemDanh) {
     this.MaHocVien = diemDanh.MaHocVien;
@@ -22,6 +22,9 @@ DiemDanh.getAll = async (page, pageSize, sortOrder = 'ASC') => {
 
 DiemDanh.findAll = async (finds) => {
     return await find(DB_CONFID.table.diemdanh, finds);
+};
+DiemDanh.updateAll = async (finds) => {
+    return await updateMany(DB_CONFID.table.diemdanh, finds);
 };
 
 export default DiemDanh;

@@ -1,10 +1,10 @@
 import express from 'express';
-import { createDiemDanh, getDiemDanhs, getDiemDanhById } from '../controllers/diemdanh.controller.js';
+import { createDiemDanh, getDiemDanhs, getDiemDanhByMaLopHoc } from '../controllers/diemdanh.controller.js';
 
 const router = express.Router();
 
 router.post('/', createDiemDanh);
 router.get('/', getDiemDanhs);
-router.get('/:MaDiemDanh', getDiemDanhById);
+router.get('/:MaLopHoc', getDiemDanhByMaLopHoc);
 
 export default router;

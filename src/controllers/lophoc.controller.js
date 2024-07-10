@@ -34,11 +34,30 @@ const getLopHocs = async (req, res) => {
     }
 };
 
-const getLopHocById = async (req, res) => {
+const getLopHocByMaGiangVien = async (req, res) => {
     try {
-        const lophoc = await LopHoc.getById(req.params.id);
-        lophoc.LichHocTrongTuan = JSON.parse(lophoc.LichHocTrongTuan);
+        const role = req.decoded.role;
+        if (!role || role!== DB_CONFID.resourses.admin.role && role!== DB_CONFID.resourses.giangvien.role) {
+            return res.status(401).json({ msg: 'Unauthorized!', success: false });
+        }
+        const MaGiangVien = req.params.MaQuanLy;
+        const lophoc = await LopHoc.findAll({MaGiangVien});
         res.status(200).json({ success: true, data: lophoc });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+const getBuoiHocByMaLopHoc = async (req, res) => {
+    try {
+        const role = req.decoded.role;
+        console.log(role);
+        if (!role || role!== DB_CONFID.resourses.admin.role && role!== DB_CONFID.resourses.giangvien.role) {
+            return res.status(401).json({ msg: 'Unauthorized!', success: false });
+        }
+        const MaLopHoc = req.params.MaLopHoc;
+        const buoiHoc = await BuoiHoc.findAll({MaLopHoc});
+        console.log(buoiHoc);
+        res.status(200).json({ success: true, data: buoiHoc });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -84,7 +103,7 @@ const updateLopHoc = async (req, res) => {
         if (NgayDuKienKetThuc) updateData.NgayDuKienKetThuc = NgayDuKienKetThuc;
         if (TongSoBuoiHoc) updateData.TongSoBuoiHoc = TongSoBuoiHoc;
         if (ThoiLuongHocTrenLop) updateData.ThoiLuongHocTrenLop = ThoiLuongHocTrenLop;
-        if (LichHocTrongTuan) updateData.LichHocTrongTuan =  JSON.stringify(LichHocTrongTuan);
+        if (LichHocTrongTuan) updateData.LichHocTrongTuan = LichHocTrongTuan;
         if (MaCoSo) updateData.MaCoSo = MaCoSo;
         if (MaKhoaHoc) updateData.MaKhoaHoc = MaKhoaHoc;
         if (MaGiangVien) updateData.MaGiangVien = MaGiangVien;
@@ -132,4 +151,4 @@ const deleteLopHoc = async (req, res) => {
     }
 };
 
-export { getLopHocs, getLopHocById, createLopHoc, updateLopHoc, deleteLopHoc };
+export { getLopHocs, getLopHocByMaGiangVien, createLopHoc, updateLopHoc, deleteLopHoc,getBuoiHocByMaLopHoc };

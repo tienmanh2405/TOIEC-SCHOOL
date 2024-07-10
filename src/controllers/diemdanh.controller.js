@@ -1,4 +1,5 @@
 import DiemDanh from '../models/diemdanh.model.js';
+import BuoiHoc from '../models/buoihoc.model.js';
 
 export const createDiemDanh = async (req, res) => {
     try {
@@ -44,25 +45,31 @@ export const getDiemDanhs = async (req, res) => {
     }
 };
 
-export const getDiemDanhById = async (req, res) => {
+export const getDiemDanhByMaLopHoc = async (req, res) => {
     try {
-        const MaDiemDanh = req.params.MaDiemDanh;
-        const diemDanh = await DiemDanh.findOne(MaDiemDanh);
-        if (!diemDanh) {
-            res.status(404).json({
+        const { MaLopHoc } = req.params;
+        const BuoiHocs = await BuoiHoc.findAll({ MaLopHoc });
+        if (!BuoiHocs.length) {
+            return res.status(404).json({
                 success: false,
-                message: 'DiemDanh not found'
+                message: 'BuoiHoc not found'
             });
-            return;
         }
-        res.status(200).json({
+        const allDiemDanh = [];
+        // Fetch DiemDanh for each BuoiHoc individually
+        for (const buoiHoc of BuoiHocs) {
+            const diemDanh = await DiemDanh.findAll({ MaBuoiHoc: buoiHoc.MaBuoiHoc });
+            allDiemDanh.push(...diemDanh);
+        }
+        return res.status(200).json({
             success: true,
-            data: diemDanh
+            data: allDiemDanh
         });
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: error.message
         });
     }
 };
+

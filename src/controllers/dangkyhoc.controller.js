@@ -29,7 +29,7 @@ const getDangKyHocs = async (req, res) => {
 const getDangKyHocByMaNguoiDung = async (req, res) => {
     try {
         const MaNguoiDung  = req.params.MaNguoiDung;
-        const dangkyhoc = await DangKyHoc.findAll(MaNguoiDung);
+        const dangkyhoc = await DangKyHoc.findAll({MaNguoiDung});
         if (dangkyhoc.length === 0) {
             return res.status(404).json({
                 success: false,
