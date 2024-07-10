@@ -23,8 +23,8 @@ DiemDanh.getAll = async (page, pageSize, sortOrder = 'ASC') => {
 DiemDanh.findAll = async (finds) => {
     return await find(DB_CONFID.table.diemdanh, finds);
 };
-DiemDanh.updateAll = async (finds) => {
-    return await updateMany(DB_CONFID.table.diemdanh, finds);
+DiemDanh.updateAll = async (updates, conditions) => {
+    return await updateMany(DB_CONFID.table.diemdanh, updates, conditions);
 };
 
 export default DiemDanh;

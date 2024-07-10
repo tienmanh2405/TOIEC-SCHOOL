@@ -2,12 +2,13 @@ BEGIN
     DECLARE done INT DEFAULT 0;
     DECLARE maKhoaHocCur INT;
     DECLARE maCoSoCur INT;
-    DECLARE maLopHoc INT;
+    DECLARE maLopHoc INT DEFAULT NULL;
     DECLARE siSoToiDa INT;
     DECLARE tongSoBuoiHoc INT;
     DECLARE thoiLuongHocTrenLop INT;
     DECLARE ngayBatDau DATE;
     DECLARE i INT;
+    DECLARE soLuongHocVienHienTai INT;
 
     -- Cursor to retrieve the courses to check
     DECLARE cur CURSOR FOR 
@@ -32,7 +33,7 @@ BEGIN
         WHERE kh.MaKhoaHoc = maKhoaHocCur;
 
         -- Check if there is an existing class with available seats
-        SELECT lh.MaLopHoc INTO maLopHoc
+        SELECT lh.MaLopHoc, lh.SoLuongHocVienHienTai INTO maLopHoc, soLuongHocVienHienTai
         FROM LopHoc lh
         WHERE lh.MaKhoaHoc = maKhoaHocCur 
           AND lh.MaCoSo = maCoSoCur
@@ -41,7 +42,7 @@ BEGIN
         LIMIT 1;
 
         -- If no existing class or class is full, create a new class
-        IF maLopHoc IS NULL THEN
+        IF maLopHoc IS NULL OR soLuongHocVienHienTai >= siSoToiDa THEN
             SET ngayBatDau = CURDATE();
             INSERT INTO LopHoc (MaKhoaHoc, MaCoSo, NgayBatDau, NgayDuKienKetThuc, TongSoBuoiHoc, ThoiLuongHocTrenLop, SoLuongHocVienHienTai)
             VALUES (maKhoaHocCur, maCoSoCur, ngayBatDau, DATE_ADD(ngayBatDau, INTERVAL ((tongSoBuoiHoc-1) * 2) DAY), tongSoBuoiHoc, thoiLuongHocTrenLop, 0);
@@ -57,18 +58,21 @@ BEGIN
             END WHILE;
         END IF;
 
-        -- Add students to the class
+        -- Add students to the class and get their IDs
         INSERT INTO HocVien (MaNguoiDung, HoTen, Email, MaLopHoc)
         SELECT dk.MaNguoiDung, dk.HoTen, dk.Email, maLopHoc
         FROM DangKyHoc dk
         WHERE dk.MaKhoaHoc = maKhoaHocCur
           AND dk.MaCoSo = maCoSoCur
           AND dk.TrangThaiThanhToan = TRUE;
-          -- Add attendance records for the new students
+
+        -- Add attendance records for the new students
         INSERT INTO DiemDanh (MaHocVien, MaBuoiHoc, TrangThai)
-        SELECT hv.MaNguoiDung, bh.MaBuoiHoc, 'Chưa điểm danh'
+        SELECT hv.MaHocVien, bh.MaBuoiHoc, 'Chưa điểm danh'
         FROM HocVien hv
-        JOIN BuoiHoc bh ON bh.MaLopHoc = maLopHoc;
+        JOIN BuoiHoc bh ON bh.MaLopHoc = hv.MaLopHoc
+        WHERE hv.MaLopHoc = maLopHoc;
+
         -- Update the current number of students in the class
         UPDATE LopHoc
         SET SoLuongHocVienHienTai = (

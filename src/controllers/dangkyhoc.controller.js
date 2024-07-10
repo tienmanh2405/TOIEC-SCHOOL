@@ -85,7 +85,6 @@ const updateDangKyHoc = async (req, res) => {
 
         const updatedDangKyHoc = await DangKyHoc.update(updateData, req.params.id);
         const call = await callProcedure('taoLopHocVaThemHocVien', []);
-        console.log(call);
         res.status(200).json({ success: true, data: updatedDangKyHoc });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

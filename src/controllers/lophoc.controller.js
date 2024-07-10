@@ -50,13 +50,11 @@ const getLopHocByMaGiangVien = async (req, res) => {
 const getBuoiHocByMaLopHoc = async (req, res) => {
     try {
         const role = req.decoded.role;
-        console.log(role);
         if (!role || role!== DB_CONFID.resourses.admin.role && role!== DB_CONFID.resourses.giangvien.role) {
             return res.status(401).json({ msg: 'Unauthorized!', success: false });
         }
         const MaLopHoc = req.params.MaLopHoc;
         const buoiHoc = await BuoiHoc.findAll({MaLopHoc});
-        console.log(buoiHoc);
         res.status(200).json({ success: true, data: buoiHoc });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

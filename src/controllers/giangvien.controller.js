@@ -85,7 +85,6 @@ const requestRefreshTokenGiangVien = async (req, res) => {
         if (!giangvien) {
             return res.status(404).json({ msg: 'Refresh token not found!' });
         }
-        console.log(giangvien.info.MaQuanLy);
         const checkRole = await QuanLy.getRoleById(giangvien.info.MaQuanLy);
         const role = checkRole.TenVaiTro;
         if (role !== 'GiangVien') {

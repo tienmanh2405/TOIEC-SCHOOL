@@ -73,3 +73,35 @@ export const getDiemDanhByMaLopHoc = async (req, res) => {
     }
 };
 
+export const updateDiemDanh = async (req, res) => {
+    try {
+        const updatedAttendance = req.body;
+
+        if (!Array.isArray(updatedAttendance) || updatedAttendance.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Dữ liệu điểm danh không hợp lệ'
+            });
+        }
+
+        const updatePromises =  updatedAttendance.map(att => {
+            return DiemDanh.updateAll({ TrangThai: att.TrangThai }, {
+                MaHocVien: att.MaHocVien,
+                MaBuoiHoc: att.MaBuoiHoc
+            });
+        });
+
+
+        return res.status(200).json({
+            success: true,
+            message: 'Cập nhật điểm danh thành công',
+            updatePromises
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+

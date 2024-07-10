@@ -197,7 +197,6 @@ const updateAdmin = async (req, res) => {
 
         // Cập nhật thông tin quản lý
         const updatedRows = await QuanLy.update(updateData, MaQuanLy);
-        console.log(updatedRows);
         if (!updatedRows) {
             return res.status(404).json({ success: false, message: "Admin not found." });
         }
@@ -239,7 +238,6 @@ const requestRefreshTokenAdmin =async (req, res) => {
         if (!admin) {
             return res.status(404).json({ msg: 'Refresh token not found!' });
         }
-        console.log(admin);
         const checkRole = await QuanLy.getRoleById(admin.info.MaQuanLy);
         const role = checkRole.TenVaiTro;
         if (role !== 'Admin') {
