@@ -94,7 +94,28 @@ export const getHocVienById = async (req, res) => {
         });
     }
 };
-
+export const getHocVienByMaNguoiDung= async (req, res) => {
+    try {
+        const MaNguoiDung = req.params.MaNguoiDung;
+        const hocVien = await HocVien.findAll({MaNguoiDung});
+        if (!hocVien) {
+            res.status(404).json({
+                success: false,
+                message: 'HocVien not found'
+            });
+            return;
+        }
+        res.status(200).json({
+            success: true,
+            data: hocVien
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 export const updateHocVien = async (req, res) => {
     try {
         const MaHocVien = req.params.MaHocVien;
