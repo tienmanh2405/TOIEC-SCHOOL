@@ -92,7 +92,7 @@ const updateUser = async (req, res) => {
         const checkMaNguoiDung = req.decoded;
         const MaNguoiDung = req.params.MaNguoiDung;
         if(checkMaNguoiDung.role !== DB_CONFID.resourses.admin.role && checkMaNguoiDung.role !== DB_CONFID.resourses.giangvien.role) {
-            if(checkMaNguoiDung.MaNguoiDung !== MaNguoiDung){
+            if(checkMaNguoiDung.info.MaNguoiDung !== MaNguoiDung){
                 res.status(401).json({msg: 'You do not have permission to update this user!',success: false});
                 return;
             }
@@ -147,9 +147,10 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
     try {
         const checkMaNguoiDung = req.decoded;
+ 
         const MaNguoiDung = req.params.MaNguoiDung;
         if(checkMaNguoiDung.role !== DB_CONFID.resourses.admin.role && checkMaNguoiDung.role !== DB_CONFID.resourses.giangvien.role) {
-            if(checkMaNguoiDung.MaNguoiDung !== MaNguoiDung){
+            if(checkMaNguoiDung.info.MaNguoiDung !== MaNguoiDung){
                 res.status(401).json({msg: 'You do not have permission to delete this user!',success: false});
                 return;
             }

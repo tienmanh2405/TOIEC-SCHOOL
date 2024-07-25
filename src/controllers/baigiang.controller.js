@@ -39,7 +39,7 @@ const getBaiGiangByMaKhoaHoc = async (req, res) => {
                 message: 'BaiGiang not found'
             });
             return;
-        }
+        }   
         res.status(200).json({
             success: true,
             data: baigiang
