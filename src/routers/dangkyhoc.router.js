@@ -10,4 +10,5 @@ router.post('/payment', createPaymentIntent);
 router.put('/update/:id', updateDangKyHoc);
 router.delete('/delete/:id', deleteDangKyHoc);
 
-export default router;
+export default router;  
+    

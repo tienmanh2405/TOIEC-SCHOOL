@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1:3307
--- Thời gian đã tạo: Th7 07, 2024 lúc 02:41 PM
+-- Thời gian đã tạo: Th7 25, 2024 lúc 11:16 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -29,12 +29,13 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `taoLopHocVaThemHocVien` ()   BEGIN
     DECLARE done INT DEFAULT 0;
     DECLARE maKhoaHocCur INT;
     DECLARE maCoSoCur INT;
-    DECLARE maLopHoc INT;
+    DECLARE maLopHoc INT DEFAULT NULL;
     DECLARE siSoToiDa INT;
     DECLARE tongSoBuoiHoc INT;
     DECLARE thoiLuongHocTrenLop INT;
     DECLARE ngayBatDau DATE;
     DECLARE i INT;
+    DECLARE soLuongHocVienHienTai INT;
 
     -- Cursor to retrieve the courses to check
     DECLARE cur CURSOR FOR 
@@ -59,26 +60,21 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `taoLopHocVaThemHocVien` ()   BEGIN
         WHERE kh.MaKhoaHoc = maKhoaHocCur;
 
         -- Check if there is an existing class with available seats
-        SELECT lh.MaLopHoc INTO maLopHoc
+        SELECT lh.MaLopHoc, lh.SoLuongHocVienHienTai INTO maLopHoc, soLuongHocVienHienTai
         FROM LopHoc lh
-        LEFT JOIN (
-            SELECT MaLopHoc, COUNT(*) AS SoLuongHocVien
-            FROM HocVien
-            GROUP BY MaLopHoc
-        ) hv ON lh.MaLopHoc = hv.MaLopHoc
         WHERE lh.MaKhoaHoc = maKhoaHocCur 
           AND lh.MaCoSo = maCoSoCur
-          AND (siSoToiDa - IFNULL(hv.SoLuongHocVien, 0)) > 0
-        ORDER BY (siSoToiDa - IFNULL(hv.SoLuongHocVien, 0)) DESC
+          AND (siSoToiDa - lh.SoLuongHocVienHienTai) > 0
+        ORDER BY (siSoToiDa - lh.SoLuongHocVienHienTai) DESC
         LIMIT 1;
 
         -- If no existing class or class is full, create a new class
-        IF maLopHoc IS NULL THEN
-        	SET ngayBatDau = CURDATE();
-            INSERT INTO LopHoc (MaKhoaHoc, MaCoSo, NgayBatDau, NgayDuKienKetThuc, TongSoBuoiHoc, ThoiLuongHocTrenLop)
-            VALUES (maKhoaHocCur, maCoSoCur, ngayBatDau, DATE_ADD(ngayBatDau, INTERVAL ((tongSoBuoiHoc-1) * 2) DAY), tongSoBuoiHoc, thoiLuongHocTrenLop);
-			
-  			SET maLopHoc = LAST_INSERT_ID();
+        IF maLopHoc IS NULL OR soLuongHocVienHienTai >= siSoToiDa THEN
+            SET ngayBatDau = CURDATE();
+            INSERT INTO LopHoc (MaKhoaHoc, MaCoSo, NgayBatDau, NgayDuKienKetThuc, TongSoBuoiHoc, ThoiLuongHocTrenLop, SoLuongHocVienHienTai)
+            VALUES (maKhoaHocCur, maCoSoCur, ngayBatDau, DATE_ADD(ngayBatDau, INTERVAL ((tongSoBuoiHoc-1) * 2) DAY), tongSoBuoiHoc, thoiLuongHocTrenLop, 0);
+
+            SET maLopHoc = LAST_INSERT_ID();
             
             -- Create sessions for the class
             SET i = 0;
@@ -89,14 +85,31 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `taoLopHocVaThemHocVien` ()   BEGIN
             END WHILE;
         END IF;
 
-        -- Add students to the class
+        -- Add students to the class and get their IDs
         INSERT INTO HocVien (MaNguoiDung, HoTen, Email, MaLopHoc)
         SELECT dk.MaNguoiDung, dk.HoTen, dk.Email, maLopHoc
         FROM DangKyHoc dk
         WHERE dk.MaKhoaHoc = maKhoaHocCur
           AND dk.MaCoSo = maCoSoCur
           AND dk.TrangThaiThanhToan = TRUE;
-		
+
+        -- Add attendance records for the new students
+        INSERT INTO DiemDanh (MaHocVien, MaBuoiHoc, TrangThai)
+        SELECT hv.MaHocVien, bh.MaBuoiHoc, 'Chưa điểm danh'
+        FROM HocVien hv
+        JOIN BuoiHoc bh ON bh.MaLopHoc = hv.MaLopHoc
+        WHERE hv.MaLopHoc = maLopHoc;
+
+        -- Update the current number of students in the class
+        UPDATE LopHoc
+        SET SoLuongHocVienHienTai = (
+            SELECT COUNT(*)
+            FROM HocVien
+            WHERE MaLopHoc = maLopHoc
+        )
+        WHERE MaLopHoc = maLopHoc;
+
+        -- Delete the registration records
         DELETE FROM DangKyHoc
         WHERE MaKhoaHoc = maKhoaHocCur
           AND MaCoSo = maCoSoCur
@@ -125,8 +138,26 @@ CREATE TABLE `baigiang` (
 --
 
 INSERT INTO `baigiang` (`MaBaiGiang`, `TenBaiGiang`, `MaKhoaHoc`) VALUES
-(1, 'Listening', 2),
-(2, 'Reading', 2);
+(1, 'Introduction to Reading Techniques', 2),
+(2, 'Intermediate Reading Strategies', 2),
+(3, 'Advanced Reading Comprehension', 2),
+(4, 'Critical Analysis of Texts', 2),
+(5, 'Basics of Writing', 4),
+(6, 'Structuring Essays', 4),
+(7, 'Advanced Writing Techniques', 4),
+(8, 'Editing and Proofreading', 4),
+(9, 'Programming Basics', 6),
+(10, 'Control Structures', 6),
+(11, 'Functions and Methods', 6),
+(12, 'Advanced Topics', 6),
+(13, 'Arithmetic Operations', 12),
+(14, 'Algebra Fundamentals', 12),
+(15, 'Geometry Basics', 12),
+(16, 'Advanced Math Topics', 12),
+(17, 'Renaissance Art', 13),
+(18, 'Baroque Art', 13),
+(19, 'Impressionism', 13),
+(20, 'Modern Art', 13);
 
 -- --------------------------------------------------------
 
@@ -160,6 +191,22 @@ CREATE TABLE `buoihoc` (
   `MaLopHoc` int(11) DEFAULT NULL,
   `NgayHoc` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `buoihoc`
+--
+
+INSERT INTO `buoihoc` (`MaBuoiHoc`, `MaLopHoc`, `NgayHoc`) VALUES
+(193, 45, '2024-07-10'),
+(194, 45, '2024-07-12'),
+(195, 45, '2024-07-14'),
+(196, 45, '2024-07-16'),
+(197, 45, '2024-07-18'),
+(198, 45, '2024-07-20'),
+(199, 45, '2024-07-22'),
+(200, 45, '2024-07-24'),
+(201, 45, '2024-07-26'),
+(202, 45, '2024-07-28');
 
 -- --------------------------------------------------------
 
@@ -243,13 +290,64 @@ CREATE TABLE `chitietbaigiang` (
 --
 
 INSERT INTO `chitietbaigiang` (`MaChiTiet`, `MaBaiGiang`, `TenNoiDung`, `NoiDung`, `TaiLieu`) VALUES
-(1, 1, 'Part 1', 'Thành thạo kỹ năng nghe các dạng hình tả người / tả vật.', NULL),
-(2, 1, 'Part 2', 'Thành thạo 12 dạng câu hỏi Listening Toeic Part 2', NULL),
-(3, 1, 'Part 3', 'Làm quen với các Topic phổ biến trong bài thi Part 3 TOEIC', NULL),
-(4, 1, 'Part 4', 'Kỹ năng nghe hiểu – nắm bắt thông tin chi tiết của bài độc thoại.', NULL),
-(5, 2, 'Part 1', 'Làm quen với các dạng bài TOEIC Reading, Cập nhật bộ từ vựng trong đề thi mỗi tháng', NULL),
-(6, 2, 'Part 2', 'Làm quen 4 dạng bài TOEIC, cập nhật các chủ đề trong đề thi mỗi tháng', NULL),
-(7, 2, 'Part 3', 'Làm quen 5 dạng bài TOEIC, kỹ năng Skim – Scan, nắm bắt thông tin chính của câu hỏi và tìm thông tin trong đoạn văn.', NULL);
+(1, 1, 'Part 1', 'Basics of reading techniques.', NULL),
+(2, 1, 'Part 2', 'Understanding text structures.', NULL),
+(3, 1, 'Part 3', 'Improving reading speed.', NULL),
+(4, 2, 'Part 1', 'Skimming and scanning methods.', NULL),
+(5, 2, 'Part 2', 'Identifying key points.', NULL),
+(6, 2, 'Part 3', 'Summarizing content.', NULL),
+(7, 3, 'Part 1', 'Techniques for deep comprehension.', NULL),
+(8, 3, 'Part 2', 'Analyzing complex texts.', NULL),
+(9, 3, 'Part 3', 'Interpreting hidden meanings.', NULL),
+(10, 4, 'Part 1', 'Critical reading skills.', NULL),
+(11, 4, 'Part 2', 'Evaluating arguments.', NULL),
+(12, 4, 'Part 3', 'Synthesizing information.', NULL),
+(13, 5, 'Part 1', 'Introduction to writing basics.', NULL),
+(14, 5, 'Part 2', 'Understanding sentence structure.', NULL),
+(15, 5, 'Part 3', 'Creating clear and concise paragraphs.', NULL),
+(16, 6, 'Part 1', 'Essay structure overview.', NULL),
+(17, 6, 'Part 2', 'Writing effective introductions.', NULL),
+(18, 6, 'Part 3', 'Developing arguments.', NULL),
+(19, 6, 'Part 4', 'Crafting strong conclusions.', NULL),
+(20, 7, 'Part 1', 'Advanced sentence construction.', NULL),
+(21, 7, 'Part 2', 'Using literary devices.', NULL),
+(22, 7, 'Part 3', 'Writing for different audiences.', NULL),
+(23, 8, 'Part 1', 'Editing for clarity and coherence.', NULL),
+(24, 8, 'Part 2', 'Proofreading techniques.', NULL),
+(25, 8, 'Part 3', 'Common grammatical errors to avoid.', NULL),
+(26, 9, 'Part 1', 'Introduction to programming languages.', NULL),
+(27, 9, 'Part 2', 'Understanding variables and data types.', NULL),
+(28, 9, 'Part 3', 'Basic syntax and operations.', NULL),
+(29, 10, 'Part 1', 'Using if-else statements.', NULL),
+(30, 10, 'Part 2', 'Loops and iterations.', NULL),
+(31, 10, 'Part 3', 'Switch statements.', NULL),
+(32, 11, 'Part 1', 'Defining and using functions.', NULL),
+(33, 11, 'Part 2', 'Parameters and return values.', NULL),
+(34, 11, 'Part 3', 'Method overloading and recursion.', NULL),
+(35, 12, 'Part 1', 'Object-oriented programming.', NULL),
+(36, 12, 'Part 2', 'Exception handling.', NULL),
+(37, 12, 'Part 3', 'File I/O operations.', NULL),
+(38, 13, 'Part 1', 'Introduction to addition and subtraction.', NULL),
+(39, 13, 'Part 2', 'Understanding multiplication and division.', NULL),
+(40, 13, 'Part 3', 'Order of operations (PEMDAS).', NULL),
+(41, 14, 'Part 1', 'Basic algebraic expressions.', NULL),
+(42, 14, 'Part 2', 'Solving linear equations.', NULL),
+(43, 14, 'Part 3', 'Introduction to functions.', NULL),
+(44, 15, 'Part 1', 'Understanding shapes and properties.', NULL),
+(45, 15, 'Part 2', 'Calculating areas and perimeters.', NULL),
+(46, 15, 'Part 3', 'Volume and surface area of solids.', NULL),
+(47, 16, 'Part 1', 'Introduction to calculus.', NULL),
+(48, 16, 'Part 2', 'Basic statistics and probability.', NULL),
+(49, 16, 'Part 3', 'Mathematical reasoning and proofs.', NULL),
+(50, 17, 'Part 1', 'Overview of Renaissance art.', NULL),
+(51, 17, 'Part 2', 'Key artists of the Renaissance.', NULL),
+(52, 17, 'Part 3', 'Influences on modern art.', NULL),
+(53, 18, 'Part 1', 'Introduction to Baroque style.', NULL),
+(54, 18, 'Part 2', 'Characteristics of Baroque art.', NULL),
+(55, 18, 'Part 3', 'Famous Baroque artists.', NULL),
+(56, 19, 'Part 1', 'Origins of Impressionism.', NULL),
+(57, 19, 'Part 2', 'Techniques and styles.', NULL),
+(58, 19, 'Part 3', 'Influence on later art movements.', NULL);
 
 -- --------------------------------------------------------
 
@@ -290,6 +388,17 @@ CREATE TABLE `dangkyhoc` (
   `clientSecret` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `dangkyhoc`
+--
+
+INSERT INTO `dangkyhoc` (`MaDangKy`, `HoTen`, `Email`, `SoDienThoai`, `MaKhoaHoc`, `MaCoSo`, `MaNguoiDung`, `TrangThaiThanhToan`, `clientSecret`) VALUES
+(69, 'Hoàng Mai Anh', 'anhhoangmai@email.com', '0666666676', 2, 1, 34, 0, 'pi_3PfcEuJUlGUSq9jK0WinzIzp_secret_JYxlstwXs8bKOEQM0luiDkHhE'),
+(70, 'Phạm Văn Quân', 'vanquan@email.com', '0385743429', 2, 1, 40, 0, 'pi_3PfcG5JUlGUSq9jK15HGicii_secret_5N7kCzIfLOXqiVesNUGPNRN8a'),
+(71, 'Phạm Văn Quân', 'vanquan@email.com', '0385743429', 4, 1, 40, 0, 'pi_3PfcGIJUlGUSq9jK0PNM5yOg_secret_C0ksU38fMEEuqUJNPv401M3Ex'),
+(72, 'Phạm Văn Quân', 'vanquan@email.com', '0385743429', 6, 1, 40, 0, 'pi_3PfcGMJUlGUSq9jK0XjsoMGz_secret_xFKN32AhaLZcR6UXmSvj6kEyk'),
+(73, 'Phạm Văn Quân', 'vanquan@email.com', '0385743429', 12, 1, 40, 0, 'pi_3PfcGVJUlGUSq9jK0FWHsQJH_secret_tDKrib9nYL6VzAsnViTO9RemK');
+
 -- --------------------------------------------------------
 
 --
@@ -300,8 +409,64 @@ CREATE TABLE `diemdanh` (
   `MaDiemDanh` int(11) NOT NULL,
   `MaHocVien` int(11) DEFAULT NULL,
   `MaBuoiHoc` int(11) DEFAULT NULL,
-  `TrangThai` enum('Đúng giờ','Muộn','Vắng không phép','Vắng có phép') DEFAULT NULL
+  `TrangThai` enum('Đúng giờ','Muộn','Vắng không phép','Vắng có phép','Chưa điểm danh') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `diemdanh`
+--
+
+INSERT INTO `diemdanh` (`MaDiemDanh`, `MaHocVien`, `MaBuoiHoc`, `TrangThai`) VALUES
+(120, 48, 193, 'Muộn'),
+(121, 48, 194, 'Đúng giờ'),
+(122, 48, 195, 'Đúng giờ'),
+(123, 48, 196, 'Đúng giờ'),
+(124, 48, 197, 'Đúng giờ'),
+(125, 48, 198, 'Đúng giờ'),
+(126, 48, 199, 'Đúng giờ'),
+(127, 48, 200, 'Muộn'),
+(128, 48, 201, 'Chưa điểm danh'),
+(129, 48, 202, 'Chưa điểm danh'),
+(130, 49, 193, 'Vắng có phép'),
+(131, 49, 194, 'Đúng giờ'),
+(132, 49, 195, 'Đúng giờ'),
+(133, 49, 196, 'Đúng giờ'),
+(134, 49, 197, 'Đúng giờ'),
+(135, 49, 198, 'Đúng giờ'),
+(136, 49, 199, 'Đúng giờ'),
+(137, 49, 200, 'Vắng có phép'),
+(138, 49, 201, 'Chưa điểm danh'),
+(139, 49, 202, 'Chưa điểm danh'),
+(140, 50, 193, 'Đúng giờ'),
+(141, 50, 194, 'Đúng giờ'),
+(142, 50, 195, 'Đúng giờ'),
+(143, 50, 196, 'Đúng giờ'),
+(144, 50, 197, 'Đúng giờ'),
+(145, 50, 198, 'Đúng giờ'),
+(146, 50, 199, 'Đúng giờ'),
+(147, 50, 200, 'Đúng giờ'),
+(148, 50, 201, 'Chưa điểm danh'),
+(149, 50, 202, 'Chưa điểm danh'),
+(150, 51, 193, 'Muộn'),
+(151, 51, 194, 'Đúng giờ'),
+(152, 51, 195, 'Đúng giờ'),
+(153, 51, 196, 'Đúng giờ'),
+(154, 51, 197, 'Đúng giờ'),
+(155, 51, 198, 'Đúng giờ'),
+(156, 51, 199, 'Đúng giờ'),
+(157, 51, 200, 'Vắng không phép'),
+(158, 51, 201, 'Chưa điểm danh'),
+(159, 51, 202, 'Chưa điểm danh'),
+(160, 52, 193, 'Đúng giờ'),
+(161, 52, 194, 'Đúng giờ'),
+(162, 52, 195, 'Đúng giờ'),
+(163, 52, 196, 'Đúng giờ'),
+(164, 52, 197, 'Đúng giờ'),
+(165, 52, 198, 'Đúng giờ'),
+(166, 52, 199, 'Đúng giờ'),
+(167, 52, 200, 'Đúng giờ'),
+(168, 52, 201, 'Chưa điểm danh'),
+(169, 52, 202, 'Chưa điểm danh');
 
 -- --------------------------------------------------------
 
@@ -318,6 +483,17 @@ CREATE TABLE `hocvien` (
   `NhanXet` text DEFAULT NULL,
   `MaLopHoc` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `hocvien`
+--
+
+INSERT INTO `hocvien` (`MaHocVien`, `MaNguoiDung`, `HoTen`, `Email`, `DiemSo`, `NhanXet`, `MaLopHoc`) VALUES
+(48, 32, 'Phạm Thị Lan', 'lanthi@gmail.com', NULL, NULL, 45),
+(49, 33, 'Lê Minh Tuấn', 'tuanle@gmail.com', NULL, NULL, 45),
+(50, 34, 'Hoàng Mai Anh', 'anhhoangmai@gmail.com', NULL, NULL, 45),
+(51, 35, 'Vũ Đức Minh', 'minhvuduc@gmail.com', NULL, NULL, 45),
+(52, 36, 'Nguyễn Thanh Tùng', 'tungnguyen@gmail.com', NULL, NULL, 45);
 
 -- --------------------------------------------------------
 
@@ -355,7 +531,7 @@ CREATE TABLE `khoahoc` (
 --
 
 INSERT INTO `khoahoc` (`MaKhoaHoc`, `TenKhoaHoc`, `MoTa`, `TongSoBuoiHoc`, `ThoiLuongTrenLop`, `SiSoToiDa`, `GiaThanh`, `HinhAnh`) VALUES
-(2, 'TOEIC Basic', 'Khóa học cơ bản, phù hợp cho người mới bắt đầu làm quen với TOEIC.', 10, '3 giờ/buổi', 2, 129.00, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718978475/TOIECSCHOOL/toiec1.jpg'),
+(2, 'TOEIC Basic', 'Khóa học cơ bản, phù hợp cho người mới bắt đầu làm quen với TOEIC.', 10, '3 giờ/buổi', 10, 129.00, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718978475/TOIECSCHOOL/toiec1.jpg'),
 (4, 'TOEIC Intermediate', 'Khóa học trung cấp, dành cho những ai đã có kiến thức cơ bản về TOEIC.', 15, '3 giờ/buổi', 2, 193.50, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718978527/TOIECSCHOOL/toiec4.jpg'),
 (6, 'TOEIC Advanced', 'Khóa học nâng cao, giúp học viên đạt điểm số cao trong kỳ thi TOEIC.', 20, '3 giờ/buổi', 20, 260.00, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718978579/TOIECSCHOOL/toiec5.jpg'),
 (12, 'TOEIC Speaking & Writing', 'Khóa học chuyên sâu vào kỹ năng nói và viết trong kỳ thi TOEIC.', 12, '2 giờ/buổi', 20, 180.00, 'https://res.cloudinary.com/dh0lhvm9l/image/upload/v1718979125/TOIECSCHOOL/toiec3.jpg'),
@@ -373,12 +549,20 @@ CREATE TABLE `lophoc` (
   `NgayBatDau` date DEFAULT NULL,
   `NgayDuKienKetThuc` date DEFAULT NULL,
   `TongSoBuoiHoc` int(11) DEFAULT NULL,
-  `ThoiLuongHocTrenLop` int(11) DEFAULT NULL,
+  `ThoiLuongHocTrenLop` text DEFAULT NULL,
   `LichHocTrongTuan` text DEFAULT NULL,
   `MaCoSo` int(11) DEFAULT NULL,
   `MaKhoaHoc` int(11) DEFAULT NULL,
-  `MaGiangVien` int(11) DEFAULT NULL
+  `MaGiangVien` int(11) DEFAULT NULL,
+  `SoLuongHocVienHienTai` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `lophoc`
+--
+
+INSERT INTO `lophoc` (`MaLopHoc`, `NgayBatDau`, `NgayDuKienKetThuc`, `TongSoBuoiHoc`, `ThoiLuongHocTrenLop`, `LichHocTrongTuan`, `MaCoSo`, `MaKhoaHoc`, `MaGiangVien`, `SoLuongHocVienHienTai`) VALUES
+(45, '2024-07-10', '2024-07-28', 10, '3', NULL, 1, 2, 12, 5);
 
 -- --------------------------------------------------------
 
@@ -643,7 +827,7 @@ ALTER TABLE `vaitro`
 -- AUTO_INCREMENT cho bảng `baigiang`
 --
 ALTER TABLE `baigiang`
-  MODIFY `MaBaiGiang` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `MaBaiGiang` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT cho bảng `baikiemtra`
@@ -655,7 +839,7 @@ ALTER TABLE `baikiemtra`
 -- AUTO_INCREMENT cho bảng `buoihoc`
 --
 ALTER TABLE `buoihoc`
-  MODIFY `MaBuoiHoc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=173;
+  MODIFY `MaBuoiHoc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=203;
 
 --
 -- AUTO_INCREMENT cho bảng `cauhoi`
@@ -667,7 +851,7 @@ ALTER TABLE `cauhoi`
 -- AUTO_INCREMENT cho bảng `chitietbaigiang`
 --
 ALTER TABLE `chitietbaigiang`
-  MODIFY `MaChiTiet` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `MaChiTiet` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
 
 --
 -- AUTO_INCREMENT cho bảng `cosodaotao`
@@ -679,19 +863,19 @@ ALTER TABLE `cosodaotao`
 -- AUTO_INCREMENT cho bảng `dangkyhoc`
 --
 ALTER TABLE `dangkyhoc`
-  MODIFY `MaDangKy` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
+  MODIFY `MaDangKy` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
 
 --
 -- AUTO_INCREMENT cho bảng `diemdanh`
 --
 ALTER TABLE `diemdanh`
-  MODIFY `MaDiemDanh` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `MaDiemDanh` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=170;
 
 --
 -- AUTO_INCREMENT cho bảng `hocvien`
 --
 ALTER TABLE `hocvien`
-  MODIFY `MaHocVien` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+  MODIFY `MaHocVien` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
 -- AUTO_INCREMENT cho bảng `ketquabaikiemtra`
@@ -709,7 +893,7 @@ ALTER TABLE `khoahoc`
 -- AUTO_INCREMENT cho bảng `lophoc`
 --
 ALTER TABLE `lophoc`
-  MODIFY `MaLopHoc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `MaLopHoc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- AUTO_INCREMENT cho bảng `nguoidung`

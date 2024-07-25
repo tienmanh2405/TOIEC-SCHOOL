@@ -29,10 +29,10 @@ const getBaiGiangs = async (req, res) => {
     }
 };
 
-const getBaiGiangById = async (req, res) => {
+const getBaiGiangByMaKhoaHoc = async (req, res) => {
     try {
-        const MaBaiGiang = req.params.MaBaiGiang;
-        const baigiang = await BaiGiang.getById(MaBaiGiang);
+        const MaKhoaHoc = req.params.MaKhoaHoc;
+        const baigiang = await BaiGiang.findAll({MaKhoaHoc});
         if (!baigiang) {
             res.status(404).json({
                 success: false,
@@ -123,4 +123,4 @@ const updateBaiGiang = async (req, res) => {
     }
 };
 
-export { getBaiGiangs, getBaiGiangById, createBaiGiang, deleteBaiGiang, updateBaiGiang };
+export { getBaiGiangs, getBaiGiangByMaKhoaHoc, createBaiGiang, deleteBaiGiang, updateBaiGiang };

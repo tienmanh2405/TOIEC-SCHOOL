@@ -1,5 +1,5 @@
 import { DB_CONFID } from '../configs/db.config.js';
-import { create, deleteById, findOne, getAll, getById, updateById } from './data.model.js';
+import { create, deleteById, findOne, getAll, getById, updateById, find } from './data.model.js';
 
 const BaiGiang = function(baigiang) {
     this.TenBaiGiang = baigiang.TenBaiGiang;
@@ -35,4 +35,7 @@ BaiGiang.findOne = async (finds) => {
     return await findOne(DB_CONFID.table.baigiang, finds);
 };
 
+BaiGiang.findAll = async (finds) => {
+    return await find(DB_CONFID.table.baigiang, finds);
+};
 export default BaiGiang;

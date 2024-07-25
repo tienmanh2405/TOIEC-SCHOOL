@@ -1,11 +1,12 @@
 import express from 'express';
-import { getKhoaHocs, getKhoaHocById, createKhoaHoc, updateKhoaHoc, deleteKhoaHoc } from '../controllers/khoahoc.controller.js';
+import { getKhoaHocs,getKhoaHocByMaLopHoc, getKhoaHocById, createKhoaHoc, updateKhoaHoc, deleteKhoaHoc } from '../controllers/khoahoc.controller.js';
 import { verify } from '../middlewares/verifytoken.middleware.js';
 import uploader from '../middlewares/uploader.middlewares.js';
 const router = express.Router();
 
 router.get('/', getKhoaHocs);
 router.get('/:id', getKhoaHocById);
+router.get('/giangvien/:MaLopHoc', getKhoaHocByMaLopHoc);
 
 
 //admin mới có quyền update, delete,create

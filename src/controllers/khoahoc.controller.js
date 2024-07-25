@@ -1,6 +1,7 @@
 import { DB_CONFID } from '../configs/db.config.js';
 import KhoaHoc from '../models/khoahoc.model.js';
 import { v2 as cloudinary } from 'cloudinary';
+import LopHoc from '../models/lophoc.model.js';
 
 cloudinary.config({
     cloud_name: 'dh0lhvm9l',
@@ -34,6 +35,22 @@ const getKhoaHocById = async (req, res) => {
     try {
         const khoahoc = await KhoaHoc.getById(req.params.id);
         res.status(200).json({ success: true, data: khoahoc });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const getKhoaHocByMaLopHoc = async (req, res) => {
+    try {
+        const MaLopHoc = req.params.MaLopHoc;
+        const LopHocs = await LopHoc.getById(MaLopHoc);
+        console.log(LopHocs);
+        if (!LopHocs) {
+            res.status(404).json({ success: false, message: 'LopHoc not found' });
+            return;
+        }
+        const khoahoc = await KhoaHoc.getById(LopHocs.MaKhoaHoc);
+        res.status(200).json({ success: true, data: khoahoc }); 
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -125,4 +142,4 @@ const deleteKhoaHoc = async (req, res) => {
     }
 };
 
-export { getKhoaHocs, getKhoaHocById, createKhoaHoc, updateKhoaHoc, deleteKhoaHoc };
+export { getKhoaHocs, getKhoaHocById, createKhoaHoc, updateKhoaHoc, deleteKhoaHoc, getKhoaHocByMaLopHoc };

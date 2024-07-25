@@ -1,7 +1,7 @@
 import express from 'express';
 import {
     getBaiGiangs,
-    getBaiGiangById,
+    getBaiGiangByMaKhoaHoc,
     createBaiGiang,
     deleteBaiGiang,
     updateBaiGiang
@@ -12,10 +12,10 @@ const router = express.Router();
 
 router.get('/', getBaiGiangs);
 
-router.get('/:MaBaiGiang', getBaiGiangById);
+router.get('/:MaKhoaHoc', getBaiGiangByMaKhoaHoc);
 
 router.post('/create', createBaiGiang);
-
+        
 router.delete('/delete/:MaBaiGiang', verify, deleteBaiGiang);
 
 router.put('/update/:MaBaiGiang', verify, updateBaiGiang);

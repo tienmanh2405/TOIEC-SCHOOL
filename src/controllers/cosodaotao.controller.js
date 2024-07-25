@@ -1,4 +1,5 @@
 import CoSoDaoTao from '../models/cosodaotao.model.js';
+import LopHoc from '../models/lophoc.model.js';
 
 const getCoSoDaoTaos = async (req, res) => {
     try {
@@ -13,6 +14,20 @@ const getCoSoDaoTaos = async (req, res) => {
 const getCoSoDaoTaoById = async (req, res) => {
     try {
         const cosodaotao = await CoSoDaoTao.getById(req.params.id);
+        res.status(200).json({ success: true, data: cosodaotao });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+const getCoSoDaoTaoByMaLopHoc= async (req, res) => {
+    try {
+        const MaLopHoc = req.params.MaLopHoc;
+        const LopHocs = await LopHoc.getById(MaLopHoc);
+        if (!LopHocs) {
+            res.status(404).json({ success: false, message: 'LopHoc not found' });
+            return;
+        }
+        const cosodaotao = await CoSoDaoTao.getById(LopHocs.MaCoSo);
         res.status(200).json({ success: true, data: cosodaotao });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -60,4 +75,4 @@ const deleteCoSoDaoTao = async (req, res) => {
     }
 };
 
-export { getCoSoDaoTaos, getCoSoDaoTaoById, createCoSoDaoTao, updateCoSoDaoTao, deleteCoSoDaoTao };
+export { getCoSoDaoTaos, getCoSoDaoTaoById, createCoSoDaoTao, updateCoSoDaoTao, deleteCoSoDaoTao , getCoSoDaoTaoByMaLopHoc};

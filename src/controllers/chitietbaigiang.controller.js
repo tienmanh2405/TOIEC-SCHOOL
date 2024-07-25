@@ -54,7 +54,7 @@ const getChiTietBaiGiangById = async (req, res) => {
 const getChiTietBaiGiangByMaBaiGiang = async (req, res) => {
     try {
         const MaBaiGiang = req.params.MaBaiGiang;
-        const chitietbaigiang = await ChiTietBaiGiang.findAll(MaBaiGiang);
+        const chitietbaigiang = await ChiTietBaiGiang.findAll({MaBaiGiang});
         if (!chitietbaigiang) {
             res.status(404).json({
                 success: false,
