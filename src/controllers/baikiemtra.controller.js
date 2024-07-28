@@ -1,4 +1,5 @@
 import BaiKiemTra from '../models/baikiemtra.model.js';
+import CauHoi from '../models/cauhoi.model.js';
 
 const getBaiKiemTras = async (req, res) => {
     try {
@@ -46,9 +47,18 @@ const getBaiKiemTraByMaBaiKiemTra = async (_, res) => {
             });
             return;
         }
+        const cauhois = await CauHoi.findAll({MaBaiKiemTra});
+        if (!cauhois) {
+            res.status(404).json({
+                success: false,
+                message: 'No questions found for this BaiKiemTra'
+            });
+            return;
+        }
         res.status(200).json({
             success: true,
-            data: baikiemtra
+            data: cauhois,
+            MaBaiKiemTra
         });
     } catch (error) {
         res.status(500).json({

@@ -1,6 +1,7 @@
 import { DB_CONFID } from '../configs/db.config.js';
 import CauHoi from '../models/cauhoi.model.js';
 import KetQuaBaiKiemTra from '../models/ketquabaiKiemTra.model.js';
+import HocVien from '../models/hocvien.model.js';
 
 const getCauHois = async (req, res) => {
     try {
@@ -144,7 +145,7 @@ const scoreBaiKiemTra = async (req, res) => {
         
 try {
     const MaBaiKiemTra = req.params.MaBaiKiemTra;
-    const { MaHocVien, answers } = req.body;
+    const { MaNguoiDung, answers, MaLopHoc } = req.body;
     
     const cauhois = await CauHoi.findAll({ MaBaiKiemTra });
 
@@ -157,18 +158,20 @@ try {
 
     let score = 0;
     let totalQuestions = cauhois.length;
+    const currentDate = new Date().toISOString().split('T')[0]; 
 
     cauhois.forEach(cauhoi => {
         if (answers[cauhoi.MaCauHoi] === cauhoi.DapAnDung) {
             score++;
         }
     });
-
+    const checkMaHocVien  = await HocVien.findAll({MaNguoiDung},{MaLopHoc});
     // Lưu điểm thi 
     const newKetQua = {
         MaBaiKiemTra,
-        MaHocVien,
-        Diem: parseFloat((score / totalQuestions * 10).toFixed(2)) // Tính điểm và làm tròn 2 chữ số thập phân
+        MaHocVien : checkMaHocVien[0].MaHocVien,
+        Diem: parseFloat((score / totalQuestions * 100).toFixed(2)) ,
+        NgayThi: currentDate
     };
 
     await KetQuaBaiKiemTra.create(newKetQua);

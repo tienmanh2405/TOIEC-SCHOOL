@@ -1,25 +1,17 @@
-import stripe from '../configs/stripe.config.js';
 import DangKyHoc from '../models/dangkyhoc.model.js';
 
 const handleStripeWebhook = async (req, res) => {
-    const sig = req.headers['stripe-signature'];
-
-    let event;
     try {
-        event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-    } catch (err) {
-        return res.status(400).send(`Webhook Error: ${err.message}`);
+        const { registrationId } = req.body;
+        const MaDangKy = registrationId;  
+        const updateDangKy = await DangKyHoc.update(
+            { TrangThaiThanhToan: true, clientSecret: null }, MaDangKy);
+        
+        res.status(200).json({ received: true, success: true, update: updateDangKy });
+    } catch (error) {
+        console.error('Error updating registration:', error);
+        res.status(500).json({ received: true, success: false, error: 'Internal Server Error' });
     }
-
-    if (event.type === 'payment_intent.succeeded') {
-        const paymentIntent = event.data.object;
-
-        const MaDangKy = paymentIntent.metadata.MaDangKy;
-
-        await DangKyHoc.update({ TrangThaiThanhToan: true, clientSecret : null }, MaDangKy);
-    }
-
-    res.status(200).json({ received: true, success: true });
 };
 
 export { handleStripeWebhook };
