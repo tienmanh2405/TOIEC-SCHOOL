@@ -1,3 +1,4 @@
+import { DB_CONFID } from '../configs/db.config.js';
 import CoSoDaoTao from '../models/cosodaotao.model.js';
 import LopHoc from '../models/lophoc.model.js';
 
