@@ -165,6 +165,44 @@ export const updateHocVienByQuanLy = async (req, res) => {
         });
     }
 };
+
+export const updateFeedbackAndScores = async (req, res) => {
+    try {
+        const roleAdmin = req.decoded.role;
+        console.log(req.decoded);
+        if (!roleAdmin || roleAdmin!== DB_CONFID.resourses.admin.role && roleAdmin!== DB_CONFID.resourses.giangvien.role) {
+            return res.status(401).json({ msg: 'Unauthorized!', success: false });
+        }
+
+        const updateFeedbackAndScore = req.body;
+        console.log(updateFeedbackAndScore);
+        if (!Array.isArray(updateFeedbackAndScore) || updateFeedbackAndScore.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Dữ liệu updateFeedbackAndScore không hợp lệ'
+            });
+        }
+
+        // Chờ tất cả các Promise hoàn thành
+        const updateResults = updateFeedbackAndScore.map(att => {
+            return HocVien.updateAll({ DiemSo: att.DiemSo, NhanXet: att.NhanXet }, { MaHocVien: att.MaHocVien }
+            );
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'HocVien updated successfully',
+            data: updateResults
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+
 export const deleteHocVien = async (req, res) => {
     try {
         const roleAdmin = req.decoded.role;

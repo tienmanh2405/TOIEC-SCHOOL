@@ -84,8 +84,8 @@ export const updateDiemDanh = async (req, res) => {
             });
         }
 
-        const updatePromises =  updatedAttendance.map(att => {
-            return DiemDanh.updateAll({ TrangThai: att.TrangThai }, {
+        const updatePromises = updatedAttendance.map(att => {
+            return DiemDanh.updateAll({ TrangThai: att.TrangThai}, {
                 MaHocVien: att.MaHocVien,
                 MaBuoiHoc: att.MaBuoiHoc
             });

@@ -47,6 +47,28 @@ const getLopHocByMaGiangVien = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+const getLopHocByMaHocVien = async (req, res) => {
+    try {
+        const MaNguoiDung = req.params.MaNguoiDung;
+        const HocViens = await HocVien.findAll({MaNguoiDung});
+        const LopHocs = [];
+
+        for (const HocVien of HocViens) {
+            const lopHoc = await LopHoc.findOne({MaLopHoc: HocVien.MaLopHoc});
+            if (lopHoc) {
+                LopHocs.push(lopHoc);
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'findAllLopHoc successfully',
+            LopHocs
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
 const getBuoiHocByMaLopHoc = async (req, res) => {
     try {
         const role = req.decoded.role;
@@ -149,4 +171,4 @@ const deleteLopHoc = async (req, res) => {
     }
 };
 
-export { getLopHocs, getLopHocByMaGiangVien, createLopHoc, updateLopHoc, deleteLopHoc,getBuoiHocByMaLopHoc };
+export { getLopHocs,getLopHocByMaHocVien, getLopHocByMaGiangVien, createLopHoc, updateLopHoc, deleteLopHoc,getBuoiHocByMaLopHoc };

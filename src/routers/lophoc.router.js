@@ -1,12 +1,13 @@
 import express from 'express';
-import { getLopHocs, getLopHocByMaGiangVien, createLopHoc, updateLopHoc, deleteLopHoc } from '../controllers/lophoc.controller.js';
+import { getLopHocs,getLopHocByMaHocVien, getLopHocByMaGiangVien, createLopHoc, updateLopHoc, deleteLopHoc } from '../controllers/lophoc.controller.js';
 import { verify } from '../middlewares/verifytoken.middleware.js';
 
 const router = express.Router();
 
 router.get('/', getLopHocs);
-router.get('/:id', getLopHocByMaGiangVien);
 
+router.get('/giangvien/:MaGiangVien',verify, getLopHocByMaGiangVien);
+router.get('/hocvien/:MaNguoiDung', getLopHocByMaHocVien);
 //admin mới có quyền update, delete,create
 router.post('/create',verify, createLopHoc);
 router.put('/update/:id',verify, updateLopHoc);

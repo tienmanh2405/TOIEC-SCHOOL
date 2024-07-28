@@ -1,8 +1,9 @@
 import { DB_CONFID } from '../configs/db.config.js';
-import { create, getAll, findOne, find, updateById ,deleteById, deleteMany } from './data.model.js';
+import { create, getAll, findOne, find, updateById ,deleteById, deleteMany, updateMany } from './data.model.js';
 
 const HocVien = function(hocVien) {
-    this.MaNguoiDung = hocVien.MaNguoiDung;
+    this.MaHocVien  = hocVien.MaHocVien;
+    this.MaNguoiDung  = hocVien.MaNguoiDung;
     this.HoTen = hocVien.HoTen;
     this.Email = hocVien.Email;
     this.DiemDanh = hocVien.DiemDanh;
@@ -41,6 +42,10 @@ HocVien.delete = async (id) => {
 
 HocVien.deleteMany = async (conditions) => {
     return await deleteMany(DB_CONFID.table.hocvien, conditions);
+};
+
+HocVien.updateAll = async (updates, conditions) => {
+    return await updateMany(DB_CONFID.table.hocvien, updates, conditions);
 };
 
 export default HocVien;
