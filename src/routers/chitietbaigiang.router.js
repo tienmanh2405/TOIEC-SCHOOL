@@ -14,7 +14,7 @@ router.get('/', getChiTietBaiGiangs);
 
 router.get('/:MaBaiGiang', getChiTietBaiGiangByMaBaiGiang);
 
-router.post('/create',createChiTietBaiGiang);
+router.post('/create', verify, createChiTietBaiGiang);   
 
 router.delete('/delete/:MaChiTiet', verify, deleteChiTietBaiGiang); 
 

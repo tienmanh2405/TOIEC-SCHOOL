@@ -1,3 +1,4 @@
+import { DB_CONFID } from '../configs/db.config.js';
 import ChiTietBaiGiang from '../models/chitietbaigiang.model.js';
 
 const getChiTietBaiGiangs = async (req, res) => {
